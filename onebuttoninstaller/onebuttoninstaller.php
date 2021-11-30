@@ -274,10 +274,10 @@ bindtextdomain($domain, $localeExtDirectory);
     	</td></tr>
     	<tr><td class="tabcont">
 <?php
-	if(!empty($input_errors))
+	if(!empty($input_errors)):
 		print_input_errors($input_errors);
 	endif;
-	if(!empty($savemsg))
+	if(!empty($savemsg)):
 		print_info_box($savemsg);
 	endif;
 	if(!empty($errormsg)):
