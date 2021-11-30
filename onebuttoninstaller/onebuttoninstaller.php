@@ -273,34 +273,57 @@ bindtextdomain($domain, $localeExtDirectory);
     		</ul>
     	</td></tr>
     	<tr><td class="tabcont">
-	        <?php if (!empty($input_errors)) print_input_errors($input_errors);?>
-            <?php if (!empty($savemsg)) print_info_box($savemsg);?>
-            <?php if (!empty($errormsg)) print_error_box($errormsg);?>
-	        <?php 
-				if ($configuration['re_install']) $remarkmsg .= "<li>".sprintf(gettext("Option '%s' in '%s' is enabled!"), gettext("Re-install"), gettext("Configuration"))."</li>";
-				if ($configuration['show_beta']) $remarkmsg .= "<li>".sprintf(gettext("Option '%s' in '%s' is enabled!"), gettext("Beta releases"), gettext("Configuration"))."</li>";
-				html_remark("storage_path", gettext("Common directory")." - {$configuration['storage_path']}", $remarkmsg);
-			?><br />
-    		<table width="100%" border="0" cellpadding="0" cellspacing="0">
-                <?php 
-                    log_display($loginfo[$log]);
-                ?>
-    		</table>
-            <div id="remarks">
-                <?php html_remark("note", gettext("Note"), gettext("After successful installation extensions can be found under the 'Extensions' entry in the navigation bar.")."<br /><b>".gettext("Some extensions need to finish their installation procedures on their own extension page before they will be shown as installed!")."</b><br /><br />");?>
-                <?php html_remark("legend", sprintf(gettext("Icons in the %s column"), "'".gettext("Install")."'"), "");?>
-                <img src='<?=$image_path?>status_disabled.png' border='0' alt='' title='' />&nbsp;&nbsp;&nbsp;<?php echo "... ".gettext("The extension can not be installed because of an unsupported architecture/platform/release of the system. Hover with the mouse over the icon to see what is unsupported.");?><br />
-                <img src='<?=$image_path?>status_enabled.png' border='0' alt='' title='' />&nbsp;&nbsp;&nbsp;<?php echo "... ".gettext("The extension is already installed."); ?><br /><br />
-            </div>
-            <div id="submit">                                                                               
-                <input name="install" type="submit" class="formbtn" title="<?=gettext("Install extensions");?>" value="<?=gettext("Install");?>" onclick="return confirm('<?=gettext("Ready to install the selected extensions?");?>')" />
-				<?php if ($configuration['re_install']) { ?>
-	                <input name="cleanup" type="submit" class="formbtn" title="<?=gettext("Cleanup of config and command scripts for selected entries - THIS DOES NOT PERFORM ANY UNINSTALL PROCEDURE NOR REMOVE FILES/DIRECTORIES FROM THE SERVER! Regular uninstallation should be done inside of the extensions!");?>" value="<?=gettext("Cleanup");?>" onclick="return confirm('<?=gettext("Ready to cleanup selected entries?");?>')" />
-				<?php } ?>
-                <input name="update" type="submit" class="formbtn" title="<?=gettext("Update extensions list");?>" value="<?=gettext("Update");?>" />
-            </div>
-    		<?php include("formend.inc");?>
+<?php
+	if(!empty($input_errors))
+		print_input_errors($input_errors);
+	endif;
+	if(!empty($savemsg))
+		print_info_box($savemsg);
+	endif;
+	if(!empty($errormsg)):
+		print_error_box($errormsg);
+	endif;
+?>
+<?php
+	$remarkmsg = '';
+	if($configuration['re_install']):
+		$remarkmsg .= "<li>" . sprintf(gettext("Option '%s' in '%s' is enabled!"),gettext("Re-install"),gettext("Configuration")) . "</li>";
+	endif;
+	if($configuration['show_beta']):
+		$remarkmsg .= "<li>" . sprintf(gettext("Option '%s' in '%s' is enabled!"),gettext("Beta releases"),gettext("Configuration")) . "</li>";
+	endif;
+	html_remark("storage_path", gettext("Common directory")." - {$configuration['storage_path']}", $remarkmsg);
+?>
+	<br />
+	<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<?php 
+		log_display($loginfo[$log]);
+?>
+	</table>
+	<div id="remarks">
+<?php
+		html_remark("note", gettext("Note"), gettext("After successful installation extensions can be found under the 'Extensions' entry in the navigation bar.")."<br /><b>".gettext("Some extensions need to finish their installation procedures on their own extension page before they will be shown as installed!")."</b><br /><br />");
+		html_remark("legend", sprintf(gettext("Icons in the %s column"), "'".gettext("Install")."'"), "");
+?>
+		<img src='<?=$image_path?>status_disabled.png' border='0' alt='' title='' />&nbsp;&nbsp;&nbsp;<?php echo "... ".gettext("The extension can not be installed because of an unsupported architecture/platform/release of the system. Hover with the mouse over the icon to see what is unsupported.");?><br />
+		<img src='<?=$image_path?>status_enabled.png' border='0' alt='' title='' />&nbsp;&nbsp;&nbsp;<?php echo "... ".gettext("The extension is already installed."); ?><br /><br />
+	</div>
+		<div id="submit">                                                                               
+			<input name="install" type="submit" class="formbtn" title="<?=gettext("Install extensions");?>" value="<?=gettext("Install");?>" onclick="return confirm('<?=gettext("Ready to install the selected extensions?");?>')" />
+<?php
+			if($configuration['re_install']):
+?>
+				<input name="cleanup" type="submit" class="formbtn" title="<?=gettext("Cleanup of config and command scripts for selected entries - THIS DOES NOT PERFORM ANY UNINSTALL PROCEDURE NOR REMOVE FILES/DIRECTORIES FROM THE SERVER! Regular uninstallation should be done inside of the extensions!");?>" value="<?=gettext("Cleanup");?>" onclick="return confirm('<?=gettext("Ready to cleanup selected entries?");?>')" />
+<?php
+			endif;
+?>
+			<input name="update" type="submit" class="formbtn" title="<?=gettext("Update extensions list");?>" value="<?=gettext("Update");?>" />
+		</div>
+<?php
+		include("formend.inc");
+?>
          </td></tr>
     </table>
 </form>
-<?php include("fend.inc");?>
+<?php
+include("fend.inc");
