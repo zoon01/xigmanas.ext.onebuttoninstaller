@@ -1,7 +1,7 @@
 <?php
 /*
 	onebuttoninstaller.php
-	
+
     Copyright (c) 2015 - 2020 Andreas Schmidhuber
     All rights reserved.
 
@@ -25,76 +25,92 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-require("auth.inc");
-require("guiconfig.inc");
+require_once 'auth.inc';
+require_once 'guiconfig.inc';
 
-if (is_file("/usr/local/www/bar_left.gif")) $image_path = '';
-else $image_path = 'images/';
+if(is_file("/usr/local/www/bar_left.gif")):
+	$image_path = '';
+else:
+	$image_path = 'images/';
+endif;
 
-$configName = "onebuttoninstaller";
+$configName = 'onebuttoninstaller';
 $configFile = "ext/{$configName}/{$configName}.conf";
-require_once("ext/{$configName}/extension-lib.inc");
+require_once "ext/{$configName}/extension-lib.inc";
 
 $domain = strtolower(get_product_name());
-$localeOSDirectory = "/usr/local/share/locale";
+$localeOSDirectory = '/usr/local/share/locale';
 $localeExtDirectory = "/usr/local/share/locale-{$configName}";
-bindtextdomain($domain, $localeExtDirectory);
+bindtextdomain($domain,$localeExtDirectory);
 
-if (($configuration = ext_load_config($configFile)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "{$configName}.conf");
-if (!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )) $input_errors[] = gettext("Extension installed with fault");
-
-if (!$configuration['enable']) header("Location:onebuttoninstaller-config.php");
-$configurationStoragePath = $configuration['storage_path'];				// to prevent collisions with installed extension definitions 
-
+if(($configuration = ext_load_config($configFile)) === false):
+	$input_errors[] = sprintf(gettext("Configuration file %s not found!"), "{$configName}.conf");
+endif;
+if(!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )):
+	$input_errors[] = gettext("Extension installed with fault");
+endif;
+if(!$configuration['enable']):
+	header('Location:onebuttoninstaller-config.php');
+endif;
+//	to prevent collisions with installed extension definitions
+$configurationStoragePath = $configuration['storage_path'];
 $platform = $g['platform'];
-if ($platform == "livecd" || $platform == "liveusb")
-	$input_errors[] = sprintf(gettext("Attention: the used XigmaNAS platform '%s' is not recommended for extensions! After a reboot all extensions will no longer be available, use XigmaNAS embedded or full platform instead!"), $platform);
-
-$pgtitle = array(gettext("Extensions"), $configuration['appname']." ".$configuration['version']);
-
-$pingServer = "github.com";
+if($platform == 'livecd' || $platform == 'liveusb'):
+	$input_errors[] = sprintf(gettext("Attention: the used platform '%s' is not recommended for extensions! After a reboot all extensions will no longer be available, use embedded or full platform instead!"),$platform);
+endif;
+$pgtitle = [gettext('Extensions'), $configuration['appname'] . ' ' . $configuration['version']];
+$pingServer = 'github.com';
 $pingReturnVal = mwexec("ping -c1 {$pingServer}", true);
-if ($pingReturnVal != 0) $input_errors[] = sprintf(gettext("Internet connection or the server '%s' is not available, please check your DNS settings under %s > %s | %s. 
-	Currently the first IPv4 DNS server address is set to '%s'"), $pingServer, gettext("System"), gettext("General Setup"), gettext("DNS"), $config['system']['dnsserver'][0]);
-
+if($pingReturnVal != 0):
+	$input_errors[] = sprintf(gettext("Internet connection or the server '%s' is not available, please check your DNS settings under %s > %s | %s. Currently the first IPv4 DNS server address is set to '%s'"),$pingServer,gettext('System'),gettext('General Setup'),gettext('DNS'),$config['system']['dnsserver'][0]);
+endif;
 $log = 0;
-$loginfo = array(
-    array(
-    	"visible" => TRUE,
-    	"desc" => gettext("Extensions"),
-    	"logfile" => "{$configuration['rootfolder']}/extensions.txt",
-    	"filename" => "extensions.txt",
-    	"type" => "plain",
-		"pattern" => "/^(.*)###(.*)###(.*)###(.*)###(.*)###(.*)###(.*)$/",
-    	"columns" => array(
-    		array("title" => gettext("Extension"), "class" => "listlr", "param" => "align=\"left\" valign=\"middle\" style=\"font-weight:bold\" nowrap", "pmid" => 0),
-    		array("title" => gettext("Version"), "class" => "listr", "param" => "align=\"center\" valign=\"middle\"", "pmid" => 1),
-    		array("title" => gettext("Description"), "class" => "listr", "param" => "align=\"left\" valign=\"middle\"", "pmid" => 5),
-    		array("title" => gettext("Install"), "class" => "listr", "param" => "align=\"center\" valign=\"middle\"", "pmid" => 4)
-    	))
-);
-
-// create FreeBSD $current_release for min_release check
-$product_version = explode(".", get_product_version());
-$current_release = $product_version[0].".".$product_version[1].$product_version[2].$product_version[3].get_product_revision();
-
+$loginfo = [
+	[
+    	'visible' => true,
+    	'desc' => gettext('Extensions'),
+    	'logfile' => "{$configuration['rootfolder']}/extensions.txt",
+    	'filename' => 'extensions.txt',
+    	'type' => 'plain',
+		'pattern' => '/^(.*)###(.*)###(.*)###(.*)###(.*)###(.*)###(.*)$/',
+    	'columns' => [
+    		['title' => gettext('Extension'),'class' => 'listlr','param' => 'align="left" valign="middle" style="font-weight:bold" nowrap','pmid' => 0],
+    		['title' => gettext('Version'),'class' => 'listr','param' => 'align="center" valign="middle"','pmid' => 1],
+    		['title' => gettext('Description'),'class' => 'listr','param' => 'align="left" valign="middle"','pmid' => 5],
+    		['title' => gettext('Install'),'class' => 'listr','param' => 'align="center" valign="middle"','pmid' => 4]
+    	]
+	]
+];
+//	create FreeBSD $current_release for min_release check
+$product_version = explode('.',get_product_version());
+$current_release = $product_version[0] . '.' . $product_version[1] . $product_version[2] . $product_version[3] . get_product_revision();
 function check_min_release($min_release) {
     global $current_release;
-    if (is_float(floatval($min_release))) {
-        if ($current_release < floatval($min_release)) return false;    // release not supported
-        else return true;                                               // release supported
-    }
-    else return true;                                                   // not a float, no release
+
+    if(is_float(floatval($min_release))):
+        if($current_release < floatval($min_release)):
+//			release not supported
+			return false;
+        else:
+//			release supported
+			return true;
+		endif;
+	else:
+//		not a float, no release
+		return true;
+	endif;
 }
 //$sup="10.3032898";        // CHECK
 //if (check_min_release($sup)) $savemsg .= "{$sup} = SUPPORTED";
 //else $savemsg .= "{$sup} = NOT SUPPORTED";
-
 function log_get_contents($logfile) {
-	$content = array();
-    if (is_file($logfile)) exec("cat {$logfile}", $extensions);
-    else return;
-    $content = $extensions;    
+	$content = [];
+    if(is_file($logfile)):
+		exec("cat {$logfile}", $extensions);
+    else:
+		return;
+	endif;
+    $content = $extensions;
 	return $content;
 }
 
@@ -104,9 +120,9 @@ function log_get_status($cmd_entry) {
 
 	if (is_array($config['rc']) && is_array($config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])) {	// old rc format
 		$rc_param_count = count($config['rc']['postinit']['cmd']);
-        for ($i = 0; $i < $rc_param_count; $i++) { 
+        for ($i = 0; $i < $rc_param_count; $i++) {
 			if (preg_match("/{$cmd_entry}/", $config['rc']['postinit']['cmd'][$i])) {
-				$rc_cmd_entry_found = true;				
+				$rc_cmd_entry_found = true;
 				break;
 			}
 		}
@@ -114,21 +130,21 @@ function log_get_status($cmd_entry) {
 
 	if (is_array($config['rc']) && is_array($config['rc']['param'])) {	// new rc format 11.x
 		$rc_param_count = count($config['rc']['param']);
-	    for ($i = 0; $i < $rc_param_count; $i++) { 
+	    for ($i = 0; $i < $rc_param_count; $i++) {
 			if (preg_match("/{$cmd_entry}/", $config['rc']['param'][$i]['value'])) {
 				$rc_cmd_entry_found = true;
 				break;
-			} 
+			}
 		}
 	}
 
 	if ($rc_cmd_entry_found) return 1;									// 0 = no entry, extension is not installed
-    else return 0;                                                      // 1 = entry found, extension is already installed                                                      
+    else return 0;                                                      // 1 = entry found, extension is already installed
 }
 
 function log_display($loginfo) {
     global $g, $config, $configuration, $savemsg, $image_path;
-    
+
 	if (!is_array($loginfo)) return;
 
 	// Create table header
@@ -160,7 +176,7 @@ function log_display($loginfo) {
     // Create table data
 	foreach ($content as $contentv) {                                   // handle each line => one extension
 		unset($result);
-        $result = explode("###", $contentv);                            // retrieve extension content (pmid based) 
+        $result = explode("###", $contentv);                            // retrieve extension content (pmid based)
 		if ((FALSE === $result) || (0 == $result)) continue;
 		echo "<tr valign=\"top\">\n";
 		for ($i = 0; $i < count($loginfo['columns']); $i++) {           // handle pmids (columns)
@@ -178,7 +194,7 @@ function log_display($loginfo) {
                     }
                     // check if extension is already installed (existing config.xml or postinit cmd entry)
                     $already_installed = false;
-                    echo "<td {$loginfo['columns'][$i]['param']} class='{$loginfo['columns'][$i]['class']}' "; 
+                    echo "<td {$loginfo['columns'][$i]['param']} class='{$loginfo['columns'][$i]['class']}' ";
                     if ((isset($config[$result[2]])) || (log_get_status($result[2]) == 1)) {
                         echo "><img src='{$image_path}status_enabled.png' border='0' alt='' title='".gettext('Enabled')."' /";
                         $already_installed = true;
@@ -232,7 +248,7 @@ if (isset($_POST['install'], $_POST['name'])) {
                         ob_start();                                     // start output buffering
                         include("{$configurationStoragePath}/{$line['command2']}");
                         $ausgabe = ob_get_contents();                   // get outputs from include command
-                        ob_end_clean();                                 // close output buffering 
+                        ob_end_clean();                                 // close output buffering
                         $savemsg = $savemsg_old;                        // recover saved messages ...
                         $savemsg .= str_replace("\n", "<br />", $ausgabe)."<br />";     // ... and append messages from include command
                     }
@@ -242,7 +258,7 @@ if (isset($_POST['install'], $_POST['name'])) {
             else {                                                     // throw error message for command1
                 $errormsg .= gettext("Installation error").": <b>{$line['truename']}</b>"."<br />";
             	foreach ($result as $msg) $errormsg .= $msg."<br />";
-            }   // EOcommand1 NOK  
+            }   // EOcommand1 NOK
         }   // EOisset line
     }   // EOforeach
 }   // EOinstall
@@ -265,24 +281,27 @@ bindtextdomain($domain, $localeExtDirectory);
 ?>
 <form action="<?php echo $configName; ?>.php" method="post" name="iform" id="iform" onsubmit="spinner()">
     <table width="100%" border="0" cellpadding="0" cellspacing="0">
-    	<tr><td class="tabnavtbl">
-    		<ul id="tabnav">
-    			<li class="tabact"><a href="onebuttoninstaller.php"><span><?=gettext("Install");?></span></a></li>
-    			<li class="tabinact"><a href="onebuttoninstaller-config.php"><span><?=gettext("Configuration");?></span></a></li>
-    			<li class="tabinact"><a href="onebuttoninstaller-update_extension.php"><span><?=gettext("Maintenance");?></span></a></li>
-    		</ul>
-    	</td></tr>
-    	<tr><td class="tabcont">
+    	<tr>
+			<td class="tabnavtbl">
+				<ul id="tabnav">
+					<li class="tabact"><a href="onebuttoninstaller.php"><span><?=gettext("Install");?></span></a></li>
+					<li class="tabinact"><a href="onebuttoninstaller-config.php"><span><?=gettext("Configuration");?></span></a></li>
+					<li class="tabinact"><a href="onebuttoninstaller-update_extension.php"><span><?=gettext("Maintenance");?></span></a></li>
+				</ul>
+			</td>
+		</tr>
+    	<tr>
+			<td class="tabcont">
 <?php
-	if(!empty($input_errors)):
-		print_input_errors($input_errors);
-	endif;
-	if(!empty($savemsg)):
-		print_info_box($savemsg);
-	endif;
-	if(!empty($errormsg)):
-		print_error_box($errormsg);
-	endif;
+				if(!empty($input_errors)):
+					print_input_errors($input_errors);
+				endif;
+				if(!empty($savemsg)):
+					print_info_box($savemsg);
+				endif;
+				if(!empty($errormsg)):
+					print_error_box($errormsg);
+				endif;
 ?>
 <?php
 	$remarkmsg = '';
@@ -296,7 +315,7 @@ bindtextdomain($domain, $localeExtDirectory);
 ?>
 	<br />
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<?php 
+<?php
 		log_display($loginfo[$log]);
 ?>
 	</table>
@@ -308,7 +327,7 @@ bindtextdomain($domain, $localeExtDirectory);
 		<img src='<?=$image_path?>status_disabled.png' border='0' alt='' title='' />&nbsp;&nbsp;&nbsp;<?php echo "... ".gettext("The extension can not be installed because of an unsupported architecture/platform/release of the system. Hover with the mouse over the icon to see what is unsupported.");?><br />
 		<img src='<?=$image_path?>status_enabled.png' border='0' alt='' title='' />&nbsp;&nbsp;&nbsp;<?php echo "... ".gettext("The extension is already installed."); ?><br /><br />
 	</div>
-		<div id="submit">                                                                               
+		<div id="submit">
 			<input name="install" type="submit" class="formbtn" title="<?=gettext("Install extensions");?>" value="<?=gettext("Install");?>" onclick="return confirm('<?=gettext("Ready to install the selected extensions?");?>')" />
 <?php
 			if($configuration['re_install']):
@@ -320,10 +339,10 @@ bindtextdomain($domain, $localeExtDirectory);
 			<input name="update" type="submit" class="formbtn" title="<?=gettext("Update extensions list");?>" value="<?=gettext("Update");?>" />
 		</div>
 <?php
-		include("formend.inc");
+			include('formend.inc');
 ?>
          </td></tr>
     </table>
 </form>
 <?php
-include("fend.inc");
+include 'fend.inc';
