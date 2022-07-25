@@ -197,7 +197,7 @@ function log_display($loginfo) {
 //	Create table data
 	foreach($content as $contentv):                                   // handle each line => one extension
 		unset($result);
-        $result = explode("###", $contentv);                            // retrieve extension content (pmid based)
+        $result = explode('###',$contentv);                            // retrieve extension content (pmid based)
 		if(($result === false) || ($result == 0)):
 			continue;
 		endif;
@@ -241,7 +241,7 @@ function log_display($loginfo) {
 		$j++;
 	endforeach;
 }
-if(isset($_POST['cleanup'], $_POST['name'])):
+if(isset($_POST['cleanup'],$_POST['name'])):
     foreach($_POST['name'] as $line):
         if(isset($line['extension'])):
 			ext_remove_rc_commands($line['extension']);						// remove entry from command scripts
@@ -253,11 +253,11 @@ if(isset($_POST['cleanup'], $_POST['name'])):
 				unlink("/usr/local/www/ext/{$line['extension']}/menu.inc");	// remove entry from extensions menu
 			endif;
 			write_config();
-            $savemsg .= gettext('Cleanup') . ": <b>{$line['truename']} ({$line['extension']})</b>" . "<br />";
+            $savemsg .= gettext('Cleanup') . ": <b>{$line['truename']} ({$line['extension']})</b>" . '<br />';
 		endif;
 	endforeach;
 endif;
-if(isset($_POST['install'], $_POST['name'])):
+if(isset($_POST['install'],$_POST['name'])):
     foreach($_POST['name'] as $line):
         if(isset($line['extension'])):
 			ext_remove_rc_commands($line['extension']);					// to force correct command script entries in case of recovered/changed config/directories for extensions
@@ -265,7 +265,7 @@ if(isset($_POST['install'], $_POST['name'])):
 			write_config();
             $savemsg .= gettext('Installation') . ": <b>{$line['truename']}</b>" . "<br />";
             unset($result);
-            exec("cd {$configurationStoragePath} && {$line['command1']}", $result, $return_val);
+            exec("cd {$configurationStoragePath} && {$line['command1']}",$result,$return_val);
             if($return_val == 0):
             	foreach($result as $msg):
 					$savemsg .= $msg . '<br />';    // output on success
@@ -279,9 +279,9 @@ if(isset($_POST['install'], $_POST['name'])):
                         $ausgabe = ob_get_contents();                   // get outputs from include command
                         ob_end_clean();                                 // close output buffering
                         $savemsg = $savemsg_old;                        // recover saved messages ...
-                        $savemsg .= str_replace("\n", "<br />", $ausgabe)."<br />";     // ... and append messages from include command
+                        $savemsg .= str_replace("\n","<br />",$ausgabe) . "<br />";     // ... and append messages from include command
                     else:
-						$errormsg .= sprintf(gettext("PHP script %s not found!"), "{$configurationStoragePath}/{$line['command2']}")."<br />";
+						$errormsg .= sprintf(gettext("PHP script %s not found!"),"{$configurationStoragePath}/{$line['command2']}") . '<br />';
 					endif;
                 endif;
 //				EOcommand1 OK

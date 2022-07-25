@@ -84,7 +84,7 @@ function change_perms($dir) {
     $path = rtrim($dir,'/');                                            // remove trailing slash
     if(strlen($path) > 1):
         if(!is_dir($path)):                                           // check if directory exists
-            $input_errors[] = sprintf(gettext("Directory %s doesn't exist!"), $path);
+            $input_errors[] = sprintf(gettext("Directory %s doesn't exist!"),$path);
         else:
             $path_check = explode("/",$path);                          // split path to get directory names
             $path_elements = count($path_check);                        // get path depth
@@ -100,7 +100,7 @@ function change_perms($dir) {
                 exec("chmod 775 {$directory}");                         // set permissions to 775
                 exec("chown {$_POST['who']} {$directory}*");
             else:
-                $input_errors[] = sprintf(gettext("{$config_name} needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."), $path, "/{$path_check[1]}/{$path_check[2]}");
+                $input_errors[] = sprintf(gettext("{$config_name} needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."),$path,"/{$path_check[1]}/{$path_check[2]}");
             endif;
         endif;
     endif;

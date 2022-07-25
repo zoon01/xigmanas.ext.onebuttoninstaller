@@ -48,9 +48,9 @@ foreach($manifest['files'] as $mFKey => $mFValue):
 	if(strpos($mFKey,'LC_MESSAGES') > 0):
 		$localeDir = dirname($mFKey);
 		if(!file_exists($localeDir)):
-			$return_val += mwexec("mkdir -p '{$localeDir}'", true);
+			$return_val += mwexec("mkdir -p '{$localeDir}'",true);
 		endif;
-		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'", true);
+		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'",true);
 	endif;
 endforeach;
 $pkgName = 'libslang2';
@@ -58,7 +58,7 @@ $pkgFileNameNeeded = $pkgName;
 $manifest = ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder);
 $manifest['files'] ??= [];
 foreach($manifest['files'] as $mFKey => $mFValue):
-	if(strpos($mFKey, "usr/local/lib/libslang.so.2") > 0):
+	if(strpos($mFKey,"usr/local/lib/libslang.so.2") > 0):
 		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'",true);
 	endif;
 endforeach;
