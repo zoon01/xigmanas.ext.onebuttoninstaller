@@ -26,58 +26,75 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-$extension_lib_version = "1.4";
+$extension_lib_version = '1.4';
 /* Version history:
  * 1.4	2019.05.14	new function ext_load_package
  * 1.3	2018.12.01	function ext_load_config: removed -> $config_data = utf8_encode($config_data); reason: wrong national character encoding
- * 1.2	2018.08.13	function ext_check_version: append line break to the output message 
+ * 1.2	2018.08.13	function ext_check_version: append line break to the output message
  * 1.1	2017.02.28	save config in ext_remove_rc_commands and ext_create_rc_commands
  * 1.0	2017.02.27	includes changes for PHP 7.1
-*/
+ */
 
 /*	function ext_load_package
  *	load packages and compare already installed packages for updates
  *	params:
  *		$pkgName: plain package name
  * 		$pkgFileNameNeeded: unique string for pkg search to retrive the right package
- * 		$rootfolder: extension root location	   
+ * 		$rootfolder: extension root location
  *	return:
  * 		package manifest array
-*/
-if (!function_exists('ext_load_package'))   {
-    function ext_load_package($pkgName, $pkgFileNameNeeded, $rootfolder) {
-		if (($manifest = ext_load_config("{$rootfolder}/bin/{$pkgName}/+MANIFEST")) !== false) $pkgInstalledVersion = "{$manifest['name']}-{$manifest['version']}";	// currently installed pkg
-		else {
-			$pkgNeeded = exec("pkg search {$pkgName} | awk '/{$pkgFileNameNeeded}/ {print $1}'", $execOutput, $return_val);	// retrieve available packages
-			$pkgFile = "{$rootfolder}/bin/All/{$pkgNeeded}.txz";															// create package file name
-			if (!is_file($pkgFile)) exec("pkg fetch -y -o '{$rootfolder}/bin' {$pkgNeeded}", $execOutput, $return_val);		// fetch necessary package
-			$return_val += mwexec("mkdir -p '{$rootfolder}/bin/{$pkgName}' && tar -xf '{$pkgFile}' -C '{$rootfolder}/bin/{$pkgName}'", true);	// extract package
-			if (($manifest = ext_load_config("{$rootfolder}/bin/{$pkgName}/+MANIFEST")) !== false) $pkgInstalledVersion = "{$manifest['name']}-{$manifest['version']}";
-		}
-		echo "Needed   : ".$pkgNeeded."\n";
-		echo "Installed: ".$pkgInstalledVersion."\n";
+ */
+if(!function_exists('ext_load_package')):
+    function ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder) {
+		$manifest = ext_load_config("{$rootfolder}/bin/{$pkgName}/+MANIFEST");
+		if($manifest !== false):
+//			currently installed pkg
+			$pkgInstalledVersion = "{$manifest['name']}-{$manifest['version']}";
+		else:
+//			retrieve available packages
+			$pkgNeeded = exec("pkg search {$pkgName} | awk '/{$pkgFileNameNeeded}/ {print $1}'",$execOutput,$return_val);
+//			create package file name
+			$pkgFile = "{$rootfolder}/bin/All/{$pkgNeeded}.txz";
+			if(!is_file($pkgFile)):
+//				fetch necessary package
+				exec("pkg fetch -y -o '{$rootfolder}/bin' {$pkgNeeded}",$execOutput,$return_val);
+			endif;
+//			extract package
+			$return_val += mwexec("mkdir -p '{$rootfolder}/bin/{$pkgName}' && tar -xf '{$pkgFile}' -C '{$rootfolder}/bin/{$pkgName}'",true);
+			$manifest = ext_load_config("{$rootfolder}/bin/{$pkgName}/+MANIFEST");
+			if($manifest !== false):
+				$pkgInstalledVersion = "{$manifest['name']}-{$manifest['version']}";
+			endif;
+		endif;
+		echo "Needed   : ",$pkgNeeded,"\n";
+		echo "Installed: ",$pkgInstalledVersion,"\n";
 		return $manifest;
 	}
-}
-
+endif;
 /*	function ext_check_release
  *	checks current release against a minimal neccessary release
  *	params:
  *		$min_release:	a float string to compare with the current used release, e.g.: 9.3, 10.3.0.3.2853 => 10.3032853, 11.0
  *	return:
  * 		true	=> current release >= minimal release
- * 		false	=> current release < minimal release 
-*/
-if (!function_exists('ext_check_release'))   {
+ * 		false	=> current release < minimal release
+ */
+if(!function_exists('ext_check_release')):
     function ext_check_release($min_release) {
 		global $config;
-		$product_version = explode(".", get_product_version());				// p.version = 10.3.0.3, p.revision = 2853
-		$current_release = $product_version[0].".".$product_version[1].$product_version[2].$product_version[3].get_product_revision();
-		if ($current_release < floatval($min_release)) return false;		// release not supported
-		else return true;													// release supported
-	}
-}
 
+//		p.version = 10.3.0.3, p.revision = 2853
+		$product_version = explode('.',get_product_version());
+		$current_release = $product_version[0] . '.' . $product_version[1] . $product_version[2] . $product_version[3] . get_product_revision();
+		if($current_release < floatval($min_release)):
+//			release not supported
+			return false;
+		else:
+//			release supported
+			return true;
+		endif;
+	}
+endif;
 /*	function ext_create_rc_commands
  *	params:
  *		$appname:	extension name
@@ -88,14 +105,16 @@ if (!function_exists('ext_check_release'))   {
  * 	return:
  * 		$postinit:	uuid or false
  * 		$shutdown:	uuid or false
-*/
-if (!function_exists('ext_create_rc_commands'))   {
-    function ext_create_rc_commands($appname, &$postinit = false, &$shutdown = false, $start_action = "Start", $stop_action = "Stop") {
+ */
+if(!function_exists('ext_create_rc_commands')):
+    function ext_create_rc_commands($appname,&$postinit = false,&$shutdown = false,$start_action = 'Start',$stop_action = 'Stop') {
 		global $config;
-		if (ext_check_release(11.0)) {										// new rc format
+
+//		new rc format
+		if(ext_check_release(11.0)):
 			unset($rc_param);
-			// postinit command
-			if (($postinit !== false) && !empty($postinit)) {
+//			postinit command
+			if(($postinit !== false) && !empty($postinit)):
 				$rc_param = [];
 				$rc_param['uuid'] = uuid();
 				$rc_param['name'] = "{$appname} Extension";
@@ -103,14 +122,18 @@ if (!function_exists('ext_create_rc_commands'))   {
 				$rc_param['comment'] = "{$start_action} {$appname}";
 				$rc_param['typeid'] = '2';
 				$rc_param['enable'] = true;
-				if (!is_array($config['rc'])) $config['rc'] = [];
-				if (!is_array($config['rc']['param'])) $config['rc']['param'] = [];
+				if(!is_array($config['rc'])):
+					$config['rc'] = [];
+				endif;
+				if(!is_array($config['rc']['param'])):
+					$config['rc']['param'] = [];
+				endif;
 				$config['rc']['param'][] = $rc_param;
 				$postinit = $rc_param['uuid'];
 				unset($rc_param);
-			}
-			// shutdown command
-			if (($shutdown !== false) && !empty($shutdown)) {
+			endif;
+//			shutdown command
+			if(($shutdown !== false) && !empty($shutdown)):
 				$rc_param = [];
 				$rc_param['uuid'] = uuid();
 				$rc_param['name'] = "{$appname} Extension";
@@ -118,59 +141,67 @@ if (!function_exists('ext_create_rc_commands'))   {
 				$rc_param['comment'] = "{$stop_action} {$appname}";
 				$rc_param['typeid'] = '3';
 				$rc_param['enable'] = true;
-				if (!is_array($config['rc'])) $config['rc'] = [];
-				if (!is_array($config['rc']['param'])) $config['rc']['param'] = [];
+				if(!is_array($config['rc'])):
+					$config['rc'] = [];
+				endif;
+				if(!is_array($config['rc']['param'])):
+					$config['rc']['param'] = [];
+				endif;
 				$config['rc']['param'][] = $rc_param;
-				$shutdown = $rc_param['uuid'];				
+				$shutdown = $rc_param['uuid'];
 				unset($rc_param);
-			}
-		}
-		else {
-			if (($postinit !== false) && !empty($postinit)) {
+			endif;
+		else:
+			if(($postinit !== false) && !empty($postinit)):
 			    $config['rc']['postinit']['cmd'][] = $postinit;
 				$postinit = false;
-			}
-			if (($shutdown !== false) && !empty($shutdown)) {
+			endif;
+			if(($shutdown !== false) && !empty($shutdown)):
 			    $config['rc']['shutdown']['cmd'][] = $shutdown;
 				$shutdown = false;
-			}
-		}
-	write_config();
+			endif;
+		endif;
+		write_config();
     }
-}
-
+endif;
 /*	function ext_remove_rc_commands
  *	remove postinit / shutdown commands from rc array for both NAS4Free < 11.x and >= 11.x series
  *	params:
- *		$config_name:	string to identify the rc command entry in rc|postinit/shutdown|cmd or rc|param|value 		                                    	
-*/
-if (!function_exists('ext_remove_rc_commands'))   {
+ *		$config_name:	string to identify the rc command entry in rc|postinit/shutdown|cmd or rc|param|value
+ */
+if(!function_exists('ext_remove_rc_commands')):
     function ext_remove_rc_commands($config_name) {
 		global $config;
-		// remove existing old rc format entries
-		if (is_array($config['rc']) && is_array($config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])) {
-		    $rc_param_count = count($config['rc']['postinit']['cmd']);
-		    for ($i = 0; $i < $rc_param_count; $i++) {
-		        if (preg_match("/{$config_name}/", $config['rc']['postinit']['cmd'][$i])) unset($config['rc']['postinit']['cmd'][$i]);
-		    }
-		}
-		if (is_array($config['rc']) && is_array($config['rc']['shutdown']) && is_array( $config['rc']['shutdown']['cmd'])) {
-		    $rc_param_count = count($config['rc']['shutdown']['cmd']);
-		    for ($i = 0; $i < $rc_param_count; $i++) {
-		        if (preg_match("/{$config_name}/", $config['rc']['shutdown']['cmd'][$i])) unset($config['rc']['shutdown']['cmd'][$i]);
-		    }
-		}
-		// remove existing entries for new rc format
-		if (is_array($config['rc']) && is_array($config['rc']['param']['0'])) {
-			$rc_param_count = count($config['rc']['param']);
-		    for ($i = 0; $i < $rc_param_count; $i++) {
-		        if (preg_match("/{$config_name}/", $config['rc']['param'][$i]['value'])) unset($config['rc']['param'][$i]);
-			}
-		}
-	write_config();
-    }
-}
 
+//		remove existing old rc format entries
+		if(is_array($config['rc']) && is_array($config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])):
+		    $rc_param_count = count($config['rc']['postinit']['cmd']);
+		    for($i = 0;$i < $rc_param_count;$i++):
+		        if(preg_match("/{$config_name}/",$config['rc']['postinit']['cmd'][$i])):
+					unset($config['rc']['postinit']['cmd'][$i]);
+				endif;
+			endfor;
+		endif;
+		if(is_array($config['rc']) && is_array($config['rc']['shutdown']) && is_array( $config['rc']['shutdown']['cmd'])):
+		    $rc_param_count = count($config['rc']['shutdown']['cmd']);
+		    for($i = 0;$i < $rc_param_count;$i++):
+		        if(preg_match("/{$config_name}/",$config['rc']['shutdown']['cmd'][$i])):
+					unset($config['rc']['shutdown']['cmd'][$i]);
+				endif;
+		    endfor;
+		endif;
+//		remove existing entries for new rc format
+		if(is_array($config['rc']) && is_array($config['rc']['param']['0'])):
+			$rc_param_count = count($config['rc']['param']);
+		    for($i = 0;$i < $rc_param_count;$i++):
+		        if(preg_match("/{$config_name}/",$config['rc']['param'][$i]['value'])):
+					unset($config['rc']['param'][$i]);
+				endif;
+			endfor;
+		endif;
+		write_config();
+    }
+endif;
 /*	function ext_check_version
  *	checks an extension if a new version exists against the currently installed version
  *	params:
@@ -181,41 +212,50 @@ if (!function_exists('ext_remove_rc_commands'))   {
  * 	return:
  * 		empty:	no new version found
  * 		or string:	message for user action on new version found
- * 		or false: 	Github version could not be retrieved 
-*/
-if (!function_exists('ext_check_version'))   {
-    function ext_check_version($test_filename, $extension_name, $current_version, $button_name) {
+ * 		or false: 	Github version could not be retrieved
+ */
+if(!function_exists('ext_check_version')):
+    function ext_check_version($test_filename,$extension_name,$current_version,$button_name) {
 		global $config;
-		if (!is_file($test_filename) || filemtime($test_filename) < time() - 86400) {	// test if file exists or is older than 24 hours
-			$return_val = mwexec("fetch -o {$test_filename} https://raw.github.com/crestAT/nas4free-{$extension_name}/master/{$extension_name}/version.txt", false);
-			if ($return_val == 0) {
+		if(!is_file($test_filename) || filemtime($test_filename) < time() - 86400):	// test if file exists or is older than 24 hours
+			$return_val = mwexec("fetch -o {$test_filename} https://raw.github.com/crestAT/nas4free-{$extension_name}/master/{$extension_name}/version.txt",false);
+			if($return_val == 0):
 			    $server_version = exec("cat {$test_filename}");
-			    if ($server_version != $current_version) return sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"), $server_version, $button_name)."<br />";
-			}
-			else return false;
-		}
+			    if($server_version != $current_version):
+					return sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"),$server_version,$button_name) . '<br />';
+				endif;
+			else:
+				return false;
+			endif;
+		endif;
     }
-}
-
+endif;
 /*	function ext_load_config
- *	loads a json formatted array from a standalone file 
+ *	loads a json formatted array from a standalone file
  *	params:
  *		$config_file:	config file including full path
  * 	return:
  *		data array:	json formatted array
- * 		or false:	config file not found or content not retrievable 		
-*/
-if (!function_exists('ext_load_config'))   {
-    function ext_load_config($config_file, $assoc = true, $depth = 512, $options = 0) {
-        if (is_file($config_file)) {
-            if (($config_data = file_get_contents($config_file)) === false) return false;
-            $config_data = json_decode($config_data, $assoc, $depth, $options);
-            return $config_data;
-        }
-        else return false;
+ * 		or false:	config file not found or content not retrievable
+ */
+if(!function_exists('ext_load_config')):
+    function ext_load_config($config_file,$assoc = true,$depth = 512,$options = 0) {
+        if(is_file($config_file)):
+			$config_data = file_get_contents($config_file);
+            if($config_data === false):
+				return false;
+			endif;
+            $config_data = json_decode($config_data,$assoc,$depth,$options);
+			if(is_array($config_data)):
+				return $config_data;
+			else:
+				return false;
+			endif;
+        else:
+			return false;
+		endif;
     }
-}
-
+endif;
 /*	function ext_save_config
  *	loads a json formatted array from a standalone file
  *	params:
@@ -224,11 +264,10 @@ if (!function_exists('ext_load_config'))   {
  * 	return:
  * 		error condition
  */
-if (!function_exists('ext_save_config'))   {
-    function ext_save_config($config_file, $config_data){
+if (!function_exists('ext_save_config')):
+    function ext_save_config($config_file,$config_data){
     	header("Content-Type: application/json; UTF-8\n");
-        file_put_contents($config_file, json_encode($config_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ));
+        file_put_contents($config_file,json_encode($config_data,JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ));
         return json_last_error();
     }
-}
-?>
+endif;

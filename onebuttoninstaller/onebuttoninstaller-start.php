@@ -1,6 +1,6 @@
 <?php
 /*
-    onebuttoninstaller-start.php 
+    onebuttoninstaller-start.php
 
     Copyright (c) 2015 - 2020 Andreas Schmidhuber
     All rights reserved.
@@ -25,29 +25,43 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-require_once("config.inc");
 
-$configName = "onebuttoninstaller";
+require_once 'config.inc';
+
+$config_name = 'onebuttoninstaller';
+
 $rootfolder = dirname(__FILE__);
-
-if (is_link("/usr/local/share/locale-{$configName}")) unlink("/usr/local/share/locale-{$configName}");
-if (is_link("/usr/local/www/{$configName}.php")) unlink("/usr/local/www/{$configName}.php");
-if (is_link("/usr/local/www/{$configName}-config.php")) unlink("/usr/local/www/{$configName}-config.php");
-if (is_link("/usr/local/www/{$configName}-update_extension.php")) unlink("/usr/local/www/{$configName}-update_extension.php");
-if (is_link("/usr/local/www/ext/{$configName}")) unlink("/usr/local/www/ext/{$configName}");
-mwexec("rmdir -p /usr/local/www/ext");
+if(is_link("/usr/local/share/locale-{$config_name}")):
+	unlink("/usr/local/share/locale-{$config_name}");
+endif;
+if(is_link("/usr/local/www/{$config_name}.php")):
+	unlink("/usr/local/www/{$config_name}.php");
+endif;
+if(is_link("/usr/local/www/{$config_name}-config.php")):
+	unlink("/usr/local/www/{$config_name}-config.php");
+endif;
+if(is_link("/usr/local/www/{$config_name}-update_extension.php")):
+	unlink("/usr/local/www/{$config_name}-update_extension.php");
+endif;
+if(is_link("/usr/local/www/ext/{$config_name}")):
+	unlink("/usr/local/www/ext/{$config_name}");
+endif;
+mwexec('rmdir -p /usr/local/www/ext');
 $return_val = 0;
-// create links to extension files
-$return_val += mwexec("ln -sw {$rootfolder}/locale-{$configName} /usr/local/share/", true);
-$return_val += mwexec("ln -sw {$rootfolder}/{$configName}.php /usr/local/www/{$configName}.php", true);
-$return_val += mwexec("ln -sw {$rootfolder}/{$configName}-config.php /usr/local/www/{$configName}-config.php", true);
-$return_val += mwexec("ln -sw {$rootfolder}/{$configName}-update_extension.php /usr/local/www/{$configName}-update_extension.php", true);
-$return_val += mwexec("mkdir -p /usr/local/www/ext", true);
-$return_val += mwexec("ln -sw {$rootfolder}/ext /usr/local/www/ext/{$configName}", true);
-// check for product name and eventually rename translation files for new product name (XigmaNAS)
+//	create links to extension files
+$return_val += mwexec("ln -sw {$rootfolder}/locale-{$config_name} /usr/local/share/",true);
+$return_val += mwexec("ln -sw {$rootfolder}/{$config_name}.php /usr/local/www/{$config_name}.php",true);
+$return_val += mwexec("ln -sw {$rootfolder}/{$config_name}-config.php /usr/local/www/{$config_name}-config.php",true);
+$return_val += mwexec("ln -sw {$rootfolder}/{$config_name}-update_extension.php /usr/local/www/{$config_name}-update_extension.php",true);
+$return_val += mwexec("mkdir -p /usr/local/www/ext",true);
+$return_val += mwexec("ln -sw {$rootfolder}/ext /usr/local/www/ext/{$config_name}",true);
+//	check for product name and eventually rename translation files for new product name (XigmaNAS)
 $domain = strtolower(get_product_name());
-if ($domain <> "nas4free") $return_val += mwexec("find {$rootfolder}/locale-{$configName} -name nas4free.mo -execdir mv nas4free.mo {$domain}.mo \;", true);
-
-if ($return_val == 0) exec("logger {$configName}-extension: started");
-else exec("logger {$configName}-extension: error(s) during startup, failed with return value = {$return_val}"); 
-?>
+if($domain <> "nas4free"):
+	$return_val += mwexec("find {$rootfolder}/locale-{$config_name} -name nas4free.mo -execdir mv nas4free.mo {$domain}.mo \;",true);
+endif;
+if($return_val == 0):
+	exec("logger {$config_name}-extension: started");
+else:
+	exec("logger {$config_name}-extension: error(s) during startup, failed with return value = {$return_val}");
+endif;

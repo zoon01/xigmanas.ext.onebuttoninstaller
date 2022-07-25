@@ -25,16 +25,25 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-require_once("config.inc");
 
-$configName = "onebuttoninstaller";
+require_once 'config.inc';
 
-if (is_link("/usr/local/share/locale-{$configName}")) unlink("/usr/local/share/locale-{$configName}");
-if (is_link("/usr/local/www/{$configName}.php")) unlink("/usr/local/www/{$configName}.php");
-if (is_link("/usr/local/www/{$configName}-config.php")) unlink("/usr/local/www/{$configName}-config.php");
-if (is_link("/usr/local/www/{$configName}-update_extension.php")) unlink("/usr/local/www/{$configName}-update_extension.php");
-if (is_link("/usr/local/www/ext/{$configName}")) unlink("/usr/local/www/ext/{$configName}");
-mwexec("rmdir -p /usr/local/www/ext");
+$config_name = 'onebuttoninstaller';
 
-exec("logger onebuttoninstaller-extension: stopped"); 
-?>
+if(is_link("/usr/local/share/locale-{$config_name}")):
+	unlink("/usr/local/share/locale-{$config_name}");
+endif;
+if(is_link("/usr/local/www/{$config_name}.php")):
+	unlink("/usr/local/www/{$config_name}.php");
+endif;
+if(is_link("/usr/local/www/{$config_name}-config.php")):
+	unlink("/usr/local/www/{$config_name}-config.php");
+endif;
+if(is_link("/usr/local/www/{$config_name}-update_extension.php")):
+	unlink("/usr/local/www/{$config_name}-update_extension.php");
+endif;
+if(is_link("/usr/local/www/ext/{$config_name}")):
+	unlink("/usr/local/www/ext/{$config_name}");
+endif;
+mwexec('rmdir -p /usr/local/www/ext');
+exec('logger onebuttoninstaller-extension: stopped');

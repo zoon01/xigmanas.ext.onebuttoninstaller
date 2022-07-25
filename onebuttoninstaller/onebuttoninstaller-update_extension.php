@@ -26,59 +26,89 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+//	fix fetch command
+putenv('SSL_NO_VERIFY_HOSTNAME=1');
+putenv('SSL_NO_VERIFY_PEER=1');
+
+$application_name = 'OneButtonInstaller';
+$config_name = 'onebuttoninstaller';
+//	$ext_repository_path = 'crestAT/nas4free-';
+$ext_repository_path = 'ms49434/xigmanas.ext.';
+$ext_repository_url = 'https://github.com/' . $ext_repository_path . $config_name;
+$ext_repository_raw = 'https://raw.github.com/' . $ext_repository_path . $config_name;
+
+$config_file = "ext/{$config_name}/{$config_name}.conf";
+
+require_once 'autoload.php';
 require_once 'auth.inc';
 require_once 'guiconfig.inc';
-
-$configName = 'onebuttoninstaller';
-$configFile = "ext/{$configName}/{$configName}.conf";
-require_once "ext/{$configName}/extension-lib.inc";
+require_once "ext/{$config_name}/extension-lib.inc";
 
 $domain = strtolower(get_product_name());
 $localeOSDirectory = "/usr/local/share/locale";
-$localeExtDirectory = "/usr/local/share/locale-{$configName}";
-bindtextdomain($domain, $localeExtDirectory);
-if(($configuration = ext_load_config($configFile)) === false):
-	$input_errors[] = sprintf(gettext("Configuration file %s not found!"),"{$configName}.conf");
+$localeExtDirectory = "/usr/local/share/locale-{$config_name}";
+bindtextdomain($domain,$localeExtDirectory);
+$configuration = ext_load_config($config_file);
+if($configuration === false):
+	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$config_name}.conf");
 endif;
+if(!is_array($configuration)):
+	$configuration = [];
+endif;
+//	default configuration
+$configuration['rootfolder'] ??= null;
+$configuration['enable'] ??= false;
+$configuration['storage_path'] ??= null;
+$configuration['path_check'] ??= false;
+$configuration['appname'] ??= $application_name;
+$configuration['version'] ??= $application_version;
+$configuration['show_beta'] ??= true;
+$configuration['re_install'] ??= false;
+$configuration['auto_update'] ??= false;
+$configuration['postinit'] ??= '';
+$configuration['shutdown'] ??= '';
+$configuration['rc_uuid_start'] ??= '';
+$configuration['rc_uuid_stop'] ??= '';
+
 if(!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )):
 	$input_errors[] = gettext('Extension installed with fault');
 endif;
-$pgtitle = array(gettext('Extensions'),gettext($configuration['appname']) . ' ' . $configuration['version'],gettext('Maintenance'));
+$pgtitle = [gettext('Extensions'),gettext($configuration['appname']) . ' ' . $configuration['version'],gettext('Maintenance')];
 if(is_file("{$configuration['rootfolder']}/oneload")):
 	require_once "{$configuration['rootfolder']}/oneload";
 endif;
-$return_val = mwexec("fetch -o {$configuration['rootfolder']}/version_server.txt https://raw.github.com/ms49434/nas4free-{$configName}/master/{$configName}/version.txt", false);
+$return_val = mwexec("fetch -o {$configuration['rootfolder']}/version_server.txt {$ext_repository_raw}/master/{$config_name}/version.txt",false);
 if($return_val == 0):
     $server_version = exec("cat {$configuration['rootfolder']}/version_server.txt");
     if($server_version != $configuration['version']):
 		$savemsg .= sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"),$server_version,gettext('Update Extension'));
 	endif;
-    mwexec("fetch -o {$configuration['rootfolder']}/release_notes.txt https://raw.github.com/ms49434/nas4free-{$configName}/master/{$configName}/release_notes.txt", false);
+    mwexec("fetch -o {$configuration['rootfolder']}/release_notes.txt {$ext_repository_raw}/master/{$config_name}/release_notes.txt",false);
 else:
-	$server_version = gettext("Unable to retrieve version from server!");
+	$server_version = gettext('Unable to retrieve version from server!');
 endif;
 if(isset($_POST['ext_remove']) && $_POST['ext_remove']):
 //	remove start/stop commands
-	ext_remove_rc_commands($configName);
+	ext_remove_rc_commands($config_name);
 //	remove extension pages/links
-    require_once "{$configuration['rootfolder']}/{$configName}-stop.php";
-	header("Location:index.php");
+    require_once "{$configuration['rootfolder']}/{$config_name}-stop.php";
+	header("Location: index.php");
 endif;
 if(isset($_POST['ext_update']) && $_POST['ext_update']):
 //	download installer & install
-    $return_val = mwexec("fetch -vo {$configuration['rootfolder']}/{$configName}-install.php 'https://raw.github.com/ms49434/nas4free-{$configName}/master/{$configName}/{$configName}-install.php'",false);
+    $return_val = mwexec("fetch -vo {$configuration['rootfolder']}/{$config_name}-install.php '{$ext_repository_raw}/master/{$config_name}/{$config_name}-install.php'",false);
     if($return_val == 0):
-        require_once "{$configuration['rootfolder']}/{$configName}-install.php";
+        require_once "{$configuration['rootfolder']}/{$config_name}-install.php";
         header('Refresh:8');
 	else:
-		$input_errors[] = sprintf(gettext("Download of installation file %s failed, installation aborted!"), "{$configName}-install.php");
+		$input_errors[] = sprintf(gettext('Download of installation file %s failed, installation aborted!'),"{$config_name}-install.php");
 	endif;
 endif;
-bindtextdomain($domain, $localeOSDirectory);
+bindtextdomain($domain,$localeOSDirectory);
 include 'fbegin.inc';
-bindtextdomain($domain, $localeExtDirectory);
+bindtextdomain($domain,$localeExtDirectory);
 ?>
-<form action="<?php echo $configName; ?>-update_extension.php" method="post" name="iform" id="iform" onsubmit="spinner()">
+<form action="<?php echo $config_name; ?>-update_extension.php" method="post" name="iform" id="iform" onsubmit="spinner()">
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
 		<tr>
 			<td class="tabnavtbl">
@@ -118,8 +148,8 @@ bindtextdomain($domain, $localeExtDirectory);
 					html_remark('note_remove',gettext('Note'),gettext("Removing {$configuration['appname']} integration from the system will leave the installation folder untouched - remove the files using Windows Explorer, FTP or some other tool of your choice. <br /><b>Please note: this page will no longer be available.</b> You'll have to re-run {$configuration['appname']} extension installation to get it back onto your system."));
 ?>
 					<br />
-					<input id="ext_update" name="ext_update" type="submit" class="formbtn" value="<?=gettext("Update Extension");?>" onclick="return confirm('<?=gettext("The selected operation will be completed. Please do not click any other buttons!");?>')" />
-					<input id="ext_remove" name="ext_remove" type="submit" class="formbtn" value="<?=gettext("Remove Extension");?>" onclick="return confirm('<?=gettext("Do you really want to remove the extension from the system?");?>')" />
+					<input id="ext_update" name="ext_update" type="submit" class="formbtn" value="<?=gettext('Update Extension');?>" onclick="return confirm('<?=gettext('The selected operation will be completed. Please do not click any other buttons!');?>')" />
+					<input id="ext_remove" name="ext_remove" type="submit" class="formbtn" value="<?=gettext('Remove Extension');?>" onclick="return confirm('<?=gettext('Do you really want to remove the extension from the system?');?>')" />
 				</div>
 				<table width="100%" border="0" cellpadding="6" cellspacing="0">
 <?php

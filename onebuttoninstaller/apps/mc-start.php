@@ -1,6 +1,6 @@
 <?php
 /*
-    mc-start.php 
+    mc-start.php
 
     Copyright (c) 2018 - 2020 Andreas Schmidhuber
     All rights reserved.
@@ -25,43 +25,55 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-require_once("config.inc");
-require_once("/usr/local/www/ext/onebuttoninstaller/extension-lib.inc");
+
+require_once 'config.inc';
+require_once '/usr/local/www/ext/onebuttoninstaller/extension-lib.inc';
+
 $rootfolder = dirname(__FILE__);
-
 $return_val = 0;
-
-$pkgName = "mc";
-$pkgFileNameNeeded = "free Norton Commander";
-$manifest = ext_load_package($pkgName, $pkgFileNameNeeded, $rootfolder);
-$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/share/mc' /usr/local/share", true);
-$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/libexec/mc' /usr/local/libexec", true);
-$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/etc/mc' /usr/local/etc", true);
-foreach ($manifest['files'] as $mFKey => $mFValue) {
-	if (strpos($mFKey, "usr/local/bin") > 0) $return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'", true);
-//	if (strpos($mFKey, "usr/local/lib") > 0) $return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'", true);
-	if (strpos($mFKey, "LC_MESSAGES") > 0) {
-		$localeDir = dirname($mFKey); 
-		if (!file_exists($localeDir)) $return_val += mwexec("mkdir -p '{$localeDir}'", true);
+$pkgName = 'mc';
+$pkgFileNameNeeded = 'free Norton Commander';
+$manifest = ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder);
+$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/share/mc' /usr/local/share",true);
+$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/libexec/mc' /usr/local/libexec",true);
+$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/etc/mc' /usr/local/etc",true);
+$manifest['files'] ??= [];
+foreach($manifest['files'] as $mFKey => $mFValue):
+	if(strpos($mFKey,'usr/local/bin') > 0):
+		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'",true);
+	endif;
+//	if(strpos($mFKey, "usr/local/lib") > 0):
+//		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'",true);
+//	endif;
+	if(strpos($mFKey,'LC_MESSAGES') > 0):
+		$localeDir = dirname($mFKey);
+		if(!file_exists($localeDir)):
+			$return_val += mwexec("mkdir -p '{$localeDir}'", true);
+		endif;
 		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'", true);
-	}
-}
-
-$pkgName = "libslang2";
+	endif;
+endforeach;
+$pkgName = 'libslang2';
 $pkgFileNameNeeded = $pkgName;
-$manifest = ext_load_package($pkgName, $pkgFileNameNeeded, $rootfolder);
-foreach ($manifest['files'] as $mFKey => $mFValue) {
-	if (strpos($mFKey, "usr/local/lib/libslang.so.2") > 0) $return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'", true);
-}
-
-$pkgName = "libssh2";
-$pkgFileNameNeeded = "^libssh2";
-$manifest = ext_load_package($pkgName, $pkgFileNameNeeded, $rootfolder);
-foreach ($manifest['files'] as $mFKey => $mFValue) {
-	if (strpos($mFKey, "usr/local/lib/libssh2.so.1") > 0) $return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'", true);
-}
-
-if ($return_val == 0) mwexec("logger midnightcommander-extension: started successfully");
-else mwexec("logger midnightcommander-extension: error(s) during startup, failed with return value = {$return_val}");
+$manifest = ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder);
+$manifest['files'] ??= [];
+foreach($manifest['files'] as $mFKey => $mFValue):
+	if(strpos($mFKey, "usr/local/lib/libslang.so.2") > 0):
+		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'",true);
+	endif;
+endforeach;
+$pkgName = 'libssh2';
+$pkgFileNameNeeded = '^libssh2';
+$manifest = ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder);
+$manifest['files'] ??= [];
+foreach($manifest['files'] as $mFKey => $mFValue):
+	if(strpos($mFKey,"usr/local/lib/libssh2.so.1") > 0):
+		$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}{$mFKey}' '{$mFKey}'",true);
+	endif;
+endforeach;
+if($return_val == 0):
+	mwexec('logger midnightcommander-extension: started successfully');
+else:
+	mwexec("logger midnightcommander-extension: error(s) during startup, failed with return value = {$return_val}");
+endif;
 echo "RETVAL = {$return_val}\n";
-?>

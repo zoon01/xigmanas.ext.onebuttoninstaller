@@ -1,6 +1,6 @@
 <?php
 /*
-    htop-start.php 
+    htop-start.php
 
     Copyright (c) 2018 - 2020 Andreas Schmidhuber
     All rights reserved.
@@ -25,20 +25,21 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-require_once("config.inc");
-require_once("/usr/local/www/ext/onebuttoninstaller/extension-lib.inc");
+
+require_once 'config.inc';
+require_once '/usr/local/www/ext/onebuttoninstaller/extension-lib.inc';
+
 $rootfolder = dirname(__FILE__);
-
 $return_val = 0;
-
-$pkgName = "htop";
+$pkgName = 'htop';
 $pkgFileNameNeeded = $pkgName;
-$manifest = ext_load_package($pkgName, $pkgFileNameNeeded, $rootfolder);
-$return_val += mwexec("mkdir -p /usr/local/share/pixmaps", true);
-$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/bin/htop' /usr/local/bin", true);
-$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/share/pixmaps/htop.png' /usr/local/share/pixmaps", true);
-
-if ($return_val == 0) mwexec("logger {$pkgName}-extension: started successfully");
-else mwexec("logger {$pkgName}-extension: error(s) during startup, failed with return value = {$return_val}");
+$manifest = ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder);
+$return_val += mwexec("mkdir -p /usr/local/share/pixmaps",true);
+$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/bin/htop' /usr/local/bin",true);
+$return_val += mwexec("ln -sf '{$rootfolder}/bin/{$pkgName}/usr/local/share/pixmaps/htop.png' /usr/local/share/pixmaps",true);
+if($return_val == 0):
+	mwexec("logger {$pkgName}-extension: started successfully");
+else:
+	mwexec("logger {$pkgName}-extension: error(s) during startup, failed with return value = {$return_val}");
+endif;
 echo "RETVAL = {$return_val}\n";
-?>

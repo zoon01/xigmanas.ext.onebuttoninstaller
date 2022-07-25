@@ -1,6 +1,6 @@
 <?php
 /*
-    show-MANIFEST.php 
+    show-MANIFEST.php
 
     Copyright (c) 2018 - 2019 Andreas Schmidhuber
     All rights reserved.
@@ -26,19 +26,24 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-if (!function_exists('ext_load_config'))   {
-    function ext_load_config($config_file, $assoc = true, $depth = 512, $options = 0) {
-        if (is_file($config_file)) {
-            if (($config_data = file_get_contents($config_file)) === false) return false;
-            $config_data = json_decode($config_data, $assoc, $depth, $options);
+if(!function_exists('ext_load_config')):
+    function ext_load_config($config_file,$assoc = true,$depth = 512,$options = 0) {
+        if(is_file($config_file)):
+            if(($config_data = file_get_contents($config_file)) === false):
+				return false;
+			endif;
+            $config_data = json_decode($config_data,$assoc,$depth,$options);
             return $config_data;
-        }
-        else return false;
+        else:
+			return false;
+		endif;
     }
-}
-
+endif;
 $fileName = $argv[1];
-echo "Show '{$fileName}':\n";
-if (($manifest = ext_load_config($fileName)) !== false) print_r($manifest);
-else echo "File '{$fileName}' not found!\n"; 
-?>
+echo 'Show ',$fileName,":\n";
+$manifest = ext_load_config($fileName);
+if($manifest !== false):
+	print_r($manifest);
+else:
+	echo "File '",$fileName,"' not found!\n";
+endif;

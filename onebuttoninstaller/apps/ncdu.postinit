@@ -26,45 +26,47 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-require_once("config.inc");
+require_once 'autoload.php';
+require_once 'config.inc';
 
-$appName = "NCurses Disk Usage";
-$command = "ncdu-start.php";
+use common\uuid;
+
+$appName = 'NCurses Disk Usage';
+$command = 'ncdu-start.php';
 $cmd = dirname(__FILE__)."/{$command}";
-
-// remove start/stop commands
-// remove existing old rc format entries
-if (is_array($config['rc']) && is_array($config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])) {
+//	remove start/stop commands
+//	remove existing old rc format entries
+if(is_array($config['rc']) && is_array($config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])):
     $rc_param_count = count($config['rc']['postinit']['cmd']);
-    for ($i = 0; $i < $rc_param_count; $i++) {
-        if (preg_match("/{$command}/", $config['rc']['postinit']['cmd'][$i])) unset($config['rc']['postinit']['cmd'][$i]);
-    }
-}
-// remove existing entries for new rc format
-if (is_array($config['rc']) && is_array($config['rc']['param']['0'])) {
+    for($i = 0;$i < $rc_param_count;$i++):
+        if(preg_match("/{$command}/",$config['rc']['postinit']['cmd'][$i])):
+			unset($config['rc']['postinit']['cmd'][$i]);
+		endif;
+    endfor;
+endif;
+//	remove existing entries for new rc format
+if(is_array($config['rc']) && is_array($config['rc']['param']['0'])) {
 	$rc_param_count = count($config['rc']['param']);
-    for ($i = 0; $i < $rc_param_count; $i++) {
-        if (preg_match("/{$command}/", $config['rc']['param'][$i]['value'])) unset($config['rc']['param'][$i]);
-	}
-}
-
-// check FreeBSD release
-$release = explode("-", exec("uname -r"));
-
-if ($release[0] >= 11.0) {	// new rc format
-	// postinit command
+    for ($i = 0;$i < $rc_param_count;$i++) {
+        if(preg_match("/{$command}/",$config['rc']['param'][$i]['value'])):
+			unset($config['rc']['param'][$i]);
+		endif;
+	endfor;
+endif;
+//	check FreeBSD release
+$release = explode('-',exec('uname -r'));
+if($release[0] >= 11.0):
+//	new rc format, postinit command
 	$rc_param = [];
-	$rc_param['uuid'] = uuid();
+	$rc_param['uuid'] = uuid::get_v4();
 	$rc_param['name'] = "{$appName} Extension";
 	$rc_param['value'] = "php {$cmd}";
 	$rc_param['comment'] = "Start {$appName}";
 	$rc_param['typeid'] = '2';
 	$rc_param['enable'] = true;
 	$config['rc']['param'][] = $rc_param;
-}
-else {
+else:
 	$config['rc']['postinit']['cmd'][] = "php {$cmd}";
-}
+endif;
 write_config();
-require_once($cmd);
-?>
+require_once $cmd;
