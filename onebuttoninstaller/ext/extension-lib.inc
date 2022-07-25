@@ -26,6 +26,11 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+require_once 'autoload.php';
+
+use common\arr;
+use common\uuid;
+
 $extension_lib_version = '1.4';
 /* Version history:
  * 1.4	2019.05.14	new function ext_load_package
@@ -116,18 +121,13 @@ if(!function_exists('ext_create_rc_commands')):
 //			postinit command
 			if(($postinit !== false) && !empty($postinit)):
 				$rc_param = [];
-				$rc_param['uuid'] = uuid();
+				$rc_param['uuid'] = uuid::create_v4();
 				$rc_param['name'] = "{$appname} Extension";
 				$rc_param['value'] = $postinit;
 				$rc_param['comment'] = "{$start_action} {$appname}";
 				$rc_param['typeid'] = '2';
 				$rc_param['enable'] = true;
-				if(!is_array($config['rc'])):
-					$config['rc'] = [];
-				endif;
-				if(!is_array($config['rc']['param'])):
-					$config['rc']['param'] = [];
-				endif;
+				arr::make_branch($config,'rc','param');
 				$config['rc']['param'][] = $rc_param;
 				$postinit = $rc_param['uuid'];
 				unset($rc_param);
@@ -135,18 +135,13 @@ if(!function_exists('ext_create_rc_commands')):
 //			shutdown command
 			if(($shutdown !== false) && !empty($shutdown)):
 				$rc_param = [];
-				$rc_param['uuid'] = uuid();
+				$rc_param['uuid'] = uuid::create_v4();
 				$rc_param['name'] = "{$appname} Extension";
 				$rc_param['value'] = $shutdown;
 				$rc_param['comment'] = "{$stop_action} {$appname}";
 				$rc_param['typeid'] = '3';
 				$rc_param['enable'] = true;
-				if(!is_array($config['rc'])):
-					$config['rc'] = [];
-				endif;
-				if(!is_array($config['rc']['param'])):
-					$config['rc']['param'] = [];
-				endif;
+				arr::make_branch($config,'rc','param');
 				$config['rc']['param'][] = $rc_param;
 				$shutdown = $rc_param['uuid'];
 				unset($rc_param);

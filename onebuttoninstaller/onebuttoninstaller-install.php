@@ -91,6 +91,7 @@ if(is_array($config['onebuttoninstaller'])):
 	write_config();
 endif;
 //	install / update application on NAS4Free
+$new_installation = false;
 if(!is_array($configuration)):
 //	from an old OBI < 0.4 installation
 	$configuration = ext_load_config($config_file);
