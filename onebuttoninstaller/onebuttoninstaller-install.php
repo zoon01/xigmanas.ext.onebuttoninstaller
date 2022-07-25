@@ -52,17 +52,10 @@ global $savemsg;
 
 //	get directory where the installer script resides
 $install_dir = dirname(__FILE__);
-//	check FreeBSD release for fetch options >= 9.3
-$release = explode('-',exec('uname -r'));
-if($release[0] >= 9.3):
-	$verify_hostname = '--no-verify-hostname';
-else:
-	$verify_hostname = '';
-endif;
 //	create stripped version name
 $vs = str_replace('.','',$v);
 //	fetch release archive
-$return_val = mwexec("fetch {$verify_hostname} -vo {$install_dir}/master.zip '{$ext_repository_url}/releases/download/{$v}/{$config_name}-{$vs}.zip'",false);
+$return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}/master.zip '{$ext_repository_url}/releases/download/{$v}/{$config_name}-{$vs}.zip'",false);
 if($return_val == 0):
     $return_val = mwexec("tar -xf {$install_dir}/master.zip -C {$install_dir} --exclude='.git*' --strip-components 2",true);
     if($return_val == 0):

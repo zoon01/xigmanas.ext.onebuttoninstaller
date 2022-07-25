@@ -105,7 +105,7 @@ if(isset($_POST['save']) && $_POST['save']):
             if(!is_dir("{$install_dir}onebuttoninstaller/log")):
 				mkdir("{$install_dir}onebuttoninstaller/log",0775,true);
 			endif;
-            $return_val = mwexec("fetch {$verify_hostname} -vo {$install_dir}onebuttoninstaller/onebuttoninstaller-install.php '{$ext_repository_raw}/master/onebuttoninstaller/onebuttoninstaller-install.php'",false);
+            $return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}onebuttoninstaller/onebuttoninstaller-install.php '{$ext_repository_raw}/master/onebuttoninstaller/onebuttoninstaller-install.php'",false);
             if($return_val == 0):
                 chmod("{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php",0775);
                 require_once "{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php";
