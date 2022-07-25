@@ -52,24 +52,36 @@ endif;
 function change_perms($dir) {
     global $input_errors;
 
-    $path = rtrim($dir,'/');                                            // remove trailing slash
+//	remove trailing slash
+	$path = rtrim($dir,'/');
     if(strlen($path) > 1):
-        if(!is_dir($path)):                                           // check if directory exists
+//		check if directory exists
+        if(!is_dir($path)):
             $input_errors[] = sprintf(gettext("Directory %s doesn't exist!"),$path);
         else:
-            $path_check = explode('/',$path);                          // split path to get directory names
-            $path_elements = count($path_check);                        // get path depth
-            $fp = substr(sprintf('%o',fileperms("/$path_check[1]/$path_check[2]")),-1);   // get mountpoint permissions for others
-            if($fp >= 5):                                             // transmission needs at least read & search permission at the mountpoint
-                $directory = "/$path_check[1]/$path_check[2]";          // set to the mountpoint
-                for($i = 3;$i < $path_elements - 1;$i++):           // traverse the path and set permissions to rx
-                    $directory = $directory . "/$path_check[$i]";         // add next level
-                    exec("chmod o=+r+x \"$directory\"");                // set permissions to o=+r+x
+//			split path to get directory names
+            $path_check = explode('/',$path);
+//			get path depth
+            $path_elements = count($path_check);
+//			get mountpoint permissions for others
+            $fp = substr(sprintf('%o',fileperms("/$path_check[1]/$path_check[2]")),-1);
+//			transmission needs at least read & search permission at the mountpoint
+            if($fp >= 5):
+//				set to the mountpoint
+                $directory = "/$path_check[1]/$path_check[2]";
+//				traverse the path and set permissions to rx
+                for($i = 3;$i < $path_elements - 1;$i++):
+//					add next level
+                    $directory = $directory . "/$path_check[$i]";
+//					set permissions to o=+r+x
+                    exec("chmod o=+r+x \"$directory\"");
                 endfor;
                 $path_elements = $path_elements - 1;
-                $directory = $directory . "/$path_check[$path_elements]"; // add last level
-                exec("chmod 775 {$directory}");                         // set permissions to 775
-                exec("chown {$_POST['who']} {$directory}*");
+//				add last level
+                $directory = $directory . "/$path_check[$path_elements]";
+//				set permissions to 775
+                exec("chmod 775 {$directory}");
+                exec("chown root {$directory}*");
             else:
                 $input_errors[] = sprintf(gettext("%s needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."),$application_name, $path, "/{$path_check[1]}/{$path_check[2]}");
             endif;
