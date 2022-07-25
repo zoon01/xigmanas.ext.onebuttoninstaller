@@ -36,6 +36,7 @@ else:
 endif;
 
 $application_name = 'OneButtonInstaller';
+$application_version = '0.4.1';
 $config_name = 'onebuttoninstaller';
 //	$ext_repository_path = 'crestAT/nas4free-';
 $ext_repository_path = 'ms49434/xigmanas.ext.';
@@ -56,10 +57,10 @@ endif;
 $configuration['rootfolder'] ??= null;
 $configuration['enable'] ??= false;
 $configuration['storage_path'] ??= null;
-$configuration['appname'] ??= 'undefined';
-$configuration['version'] ??= 'unknown';
-$configuration['show-beta'] ??= true;
-$configuration['re-install'] ??= false;
+$configuration['appname'] ??= $application_name;
+$configuration['version'] ??= $application_version;
+$configuration['show_beta'] ??= true;
+$configuration['re_install'] ??= false;
 $configuration['auto_update'] ??= false;
 if(!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )):
 	$input_errors[] = gettext('Extension installed with fault');

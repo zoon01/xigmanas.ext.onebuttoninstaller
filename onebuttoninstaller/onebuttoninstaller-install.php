@@ -27,8 +27,8 @@
 */
 
 //	extension version
-$v = 'v0.4.1';
 $application_name = 'OneButtonInstaller';
+$application_version = 'v0.4.1';
 $config_name = 'onebuttoninstaller';
 //	$ext_repository_path = 'crestAT/nas4free-.';
 $ext_repository_path = 'ms49434/xigmanas.ext.';
@@ -53,9 +53,9 @@ global $savemsg;
 //	get directory where the installer script resides
 $install_dir = dirname(__FILE__);
 //	create stripped version name
-$vs = str_replace('.','',$v);
+$vs = str_replace('.','',$application_version);
 //	fetch release archive
-$return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}/master.zip '{$ext_repository_url}/releases/download/{$v}/{$config_name}-{$vs}.zip'",false);
+$return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}/master.zip '{$ext_repository_url}/releases/download/{$application_version}/{$config_name}-{$vs}.zip'",false);
 if($return_val == 0):
     $return_val = mwexec("tar -xf {$install_dir}/master.zip -C {$install_dir} --exclude='.git*' --strip-components 2",true);
     if($return_val == 0):
