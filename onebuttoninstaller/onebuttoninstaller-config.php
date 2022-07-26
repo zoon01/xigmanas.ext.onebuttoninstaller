@@ -50,10 +50,8 @@ $dummy = gettext('The changes have been applied successfully.');
 $dummy = gettext('The configuration has been changed.<br />You must apply the changes in order for them to take effect.');
 $dummy = gettext('The following input errors were detected');
 $configuration = ext_load_config($config_file);
-if($configuration === false):
-	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$app['config.name']}.conf");
-endif;
 if(!is_array($configuration)):
+	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$app['config.name']}.conf");
 	$configuration = [];
 endif;
 //	default configuration
@@ -81,58 +79,70 @@ endif;
 $pgtitle = [gettext('Extensions'),$configuration['appname'] . ' ' . $configuration['version'],gettext('Configuration')];
 //	Check if the directory exists, the mountpoint has at least o=rx permissions and set the permission to 775 for the last directory in the path
 function change_perms($dir) {
-    global $input_errors;
+	global $input_errors;
 
-    $path = rtrim($dir,'/');                                            // remove trailing slash
-    if(strlen($path) > 1):
-        if(!is_dir($path)):                                           // check if directory exists
-            $input_errors[] = sprintf(gettext("Directory %s doesn't exist!"),$path);
-        else:
-            $path_check = explode("/",$path);                          // split path to get directory names
-            $path_elements = count($path_check);                        // get path depth
-            $fp = substr(sprintf('%o',fileperms("/$path_check[1]/$path_check[2]")),-1);   // get mountpoint permissions for others
-            if($fp >= 5):                                             // transmission needs at least read & search permission at the mountpoint
-                $directory = "/$path_check[1]/$path_check[2]";          // set to the mountpoint
-                for($i = 3; $i < $path_elements - 1; $i++):           // traverse the path and set permissions to rx
-                    $directory = $directory."/$path_check[$i]";         // add next level
-                    exec("chmod o=+r+x \"$directory\"");                // set permissions to o=+r+x
-                endfor;
-                $path_elements = $path_elements - 1;
-                $directory = $directory."/$path_check[$path_elements]"; // add last level
-                exec("chmod 775 {$directory}");                         // set permissions to 775
-                exec("chown root {$directory}*");
-            else:
-                $input_errors[] = sprintf(gettext("{$app['config.name']} needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."),$path,"/{$path_check[1]}/{$path_check[2]}");
-            endif;
-        endif;
-    endif;
+//	remove trailing slash
+	$path = rtrim($dir,'/');
+	if(strlen($path) > 1):
+//		check if directory exists
+		if(!is_dir($path)):
+			$input_errors[] = sprintf(gettext("Directory %s doesn't exist!"),$path);
+		else:
+//			split path to get directory names
+			$path_check = explode("/",$path);
+//			get path depth
+			$path_elements = count($path_check);
+//			get mountpoint permissions for others
+			$fp = substr(sprintf('%o',fileperms("/$path_check[1]/$path_check[2]")),-1);
+//			transmission needs at least read & search permission at the mountpoint
+			if($fp >= 5):
+//				set to the mountpoint
+				$directory = "/$path_check[1]/$path_check[2]";
+//				traverse the path and set permissions to rx
+				for($i = 3; $i < $path_elements - 1; $i++):
+//					add next level
+					$directory = $directory."/$path_check[$i]";
+//					set permissions to o=+r+x
+					exec("chmod o=+r+x \"$directory\"");
+				endfor;
+				$path_elements = $path_elements - 1;
+//				add last level
+				$directory = $directory."/$path_check[$path_elements]";
+//				set permissions to 775
+				exec("chmod 775 {$directory}");
+				exec("chown root {$directory}*");
+			else:
+				$input_errors[] = sprintf(gettext("{$app['config.name']} needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."),$path,"/{$path_check[1]}/{$path_check[2]}");
+			endif;
+		endif;
+	endif;
 }
 if(isset($_POST['save']) && $_POST['save']):
-    unset($input_errors);
+	unset($input_errors);
 	if (empty($input_errors)):
-        $configuration['enable'] = isset($_POST['enable']);
-        if($configuration['enable']):
-            $configuration['storage_path'] = !empty($_POST['storage_path']) ? $_POST['storage_path'] : $g['media_path'];
+		$configuration['enable'] = isset($_POST['enable']);
+		if($configuration['enable']):
+			$configuration['storage_path'] = !empty($_POST['storage_path']) ? $_POST['storage_path'] : $g['media_path'];
 //			ensure to have NO trailing slash
-            $configuration['storage_path'] = rtrim($configuration['storage_path'],'/');
-            if(!isset($_POST['path_check']) && (strpos($configuration['storage_path'],"/mnt/") === false)):
-                $input_errors[] = gettext("The common directory for all extensions MUST be set to a directory below <b>'/mnt/'</b> to prevent to loose the extensions after a reboot on embedded systems!");
-            else:
-                if(!is_dir($configuration['storage_path'])):
+			$configuration['storage_path'] = rtrim($configuration['storage_path'],'/');
+			if(!isset($_POST['path_check']) && (strpos($configuration['storage_path'],"/mnt/") === false)):
+				$input_errors[] = gettext("The common directory for all extensions MUST be set to a directory below <b>'/mnt/'</b> to prevent to loose the extensions after a reboot on embedded systems!");
+			else:
+				if(!is_dir($configuration['storage_path'])):
 					mkdir($configuration['storage_path'],0775,true);
 				endif;
-                change_perms($_POST['storage_path']);
-                $configuration['path_check'] = isset($_POST['path_check']);
-                $configuration['re_install'] = isset($_POST['re_install']);
-                $configuration['auto_update'] = isset($_POST['auto_update']);
-                $configuration['show_beta'] = isset($_POST['show_beta']);
+				change_perms($_POST['storage_path']);
+				$configuration['path_check'] = isset($_POST['path_check']);
+				$configuration['re_install'] = isset($_POST['re_install']);
+				$configuration['auto_update'] = isset($_POST['auto_update']);
+				$configuration['show_beta'] = isset($_POST['show_beta']);
 				$savemsg .= get_std_save_message(ext_save_config($config_file,$configuration)) . ' ';
-                require_once "{$configuration['rootfolder']}/{$app['config.name']}-start.php";
-            endif;
-        else:
+				require_once "{$configuration['rootfolder']}/{$app['config.name']}-start.php";
+			endif;
+		else:
 			$savemsg .= get_std_save_message(ext_save_config($config_file,$configuration)) . ' ';
 		endif;
-    endif;
+	endif;
 endif;
 $pconfig['enable'] = $configuration['enable'];
 $pconfig['storage_path'] = !empty($configuration['storage_path']) ? $configuration['storage_path'] : $g['media_path'];
@@ -151,7 +161,7 @@ bindtextdomain($domain,$localeExtDirectory);
 <script>
 //<![CDATA[
 function enable_change(enable_change) {
-    var endis = !(document.iform.enable.checked || enable_change);
+	var endis = !(document.iform.enable.checked || enable_change);
 	document.iform.storage_path.disabled = endis;
 	document.iform.storage_pathbrowsebtn.disabled = endis;
 	document.iform.path_check.disabled = endis;
@@ -162,14 +172,14 @@ function enable_change(enable_change) {
 //]]>
 </script>
 <form action="<?php echo $app['config.name']; ?>-config.php" method="post" name="iform" id="iform" onsubmit="spinner()">
-    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+	<table width="100%" border="0" cellpadding="0" cellspacing="0">
 		<tr>
 			<td class="tabnavtbl">
 				<ul id="tabnav">
 <?php
 					if($configuration['enable']):
 ?>
-		    			<li class="tabinact"><a href="onebuttoninstaller.php"><span><?=gettext('Install');?></span></a></li>
+						<li class="tabinact"><a href="onebuttoninstaller.php"><span><?=gettext('Install');?></span></a></li>
 <?php
 					endif;
 ?>
@@ -188,7 +198,7 @@ function enable_change(enable_change) {
 					print_info_box($savemsg);
 				endif;
 ?>
-		        <table width="100%" border="0" cellpadding="6" cellspacing="0">
+				<table width="100%" border="0" cellpadding="6" cellspacing="0">
 <?php
 					html_titleline_checkbox('enable',gettext($configuration['appname']),$pconfig['enable'],gettext('Enable'),'enable_change(false)');
 					html_text('installation_directory',gettext('Installation directory'),sprintf(gettext('The extension is installed in %s'),$configuration['rootfolder']));

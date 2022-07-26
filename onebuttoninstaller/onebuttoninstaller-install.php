@@ -56,30 +56,30 @@ $install_dir = dirname(__FILE__);
 //	create stripped version name
 $vs = str_replace('.','',$app['version']);
 //	fetch release archive
-$return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}/master.zip '{$app['repository.url']}/releases/download/{$app['version']}/{$app['config.name']}-{$vs}.zip'",false);
+$return_val = mwexec("fetch --no-verify-hostname --no-verify-peer -vo {$install_dir}/master.zip '{$app['repository.url']}/releases/download/{$app['version']}/{$app['config.name']}-{$vs}.zip'",false);
 if($return_val == 0):
-    $return_val = mwexec("tar -xf {$install_dir}/master.zip -C {$install_dir} --exclude='.git*' --strip-components 2",true);
-    if($return_val == 0):
-        exec("rm {$install_dir}/master.zip");
-        exec("chmod -R 775 {$install_dir}");
-        require_once "{$install_dir}/ext/extension-lib.inc";
-        $config_file = "{$install_dir}/ext/{$app['config.name']}.conf";
-        if(is_file("{$install_dir}/version.txt")):
+	$return_val = mwexec("tar -xf {$install_dir}/master.zip -C {$install_dir} --exclude='.git*' --strip-components 2",true);
+	if($return_val == 0):
+		exec("rm {$install_dir}/master.zip");
+		exec("chmod -R 775 {$install_dir}");
+		require_once "{$install_dir}/ext/extension-lib.inc";
+		$config_file = "{$install_dir}/ext/{$app['config.name']}.conf";
+		if(is_file("{$install_dir}/version.txt")):
 			$file_version = exec("cat {$install_dir}/version.txt");
-        else:
-			$file_version = "n/a";
+		else:
+			$file_version = 'n/a';
 		endif;
-        $savemsg = sprintf(gettext("Update to version %s completed!"),$file_version);
-    else:
-        $input_errors[] = sprintf(gettext("Archive file %s not found, installation aborted!"),"master.zip corrupt /");
-        return;
-    endif;
+		$savemsg = sprintf(gettext("Update to version %s completed!"),$file_version);
+	else:
+		$input_errors[] = sprintf(gettext("Archive file %s not found, installation aborted!"),"master.zip corrupt /");
+		return;
+	endif;
 else:
-    $input_errors[] = sprintf(gettext("Archive file %s not found, installation aborted!"),"master.zip");
-    return;
+	$input_errors[] = sprintf(gettext("Archive file %s not found, installation aborted!"),'master.zip');
+	return;
 endif;
 //	uninstall old OBI files < v0.4 and remove the application section from config.xml
-if(is_array($config['onebuttoninstaller'])):
+if(array_key_exists('onebuttoninstaller',$config) && is_array($config['onebuttoninstaller'])):
 	mwexec("rm -Rf /usr/local/www/onebuttoninstaller*",false);
 	mwexec("rm -Rf /usr/local/www/ext/onebuttoninstaller",false);
 	mwexec("rm -Rf {$install_dir}/locale-obi",false);
@@ -96,12 +96,12 @@ $new_installation = false;
 if(!is_array($configuration)):
 //	from an old OBI < 0.4 installation
 	$configuration = ext_load_config($config_file);
-	if($configuration === false):
+	if(!is_array($configuration)):
 //		from an OBI >= 0.4 installation
-	    $configuration = [];
-	    $new_installation = true;
+		$configuration = [];
+		$new_installation = true;
 //		new installation
-    endif;
+	endif;
 endif;
 $configuration['appname'] = $app['name'];
 $configuration['version'] = exec("cat {$install_dir}/version.txt");
@@ -119,4 +119,4 @@ if($new_installation):
 	echo "\nInstallation completed, use WebGUI | Extensions | {$app['name']} to configure the application!\n";
 endif;
 //	finally fetch the most recent extensions list to get the latest changes if not already in the master release
-$return_val = mwexec("fetch -o {$install_dir}/extensions.txt {$app['repository.raw']}/master/{$app['config.name']}/extensions.txt",false);
+$return_val = mwexec("fetch --no-verify-hostname --no-verify-peer -o {$install_dir}/extensions.txt {$app['repository.raw']}/master/{$app['config.name']}/extensions.txt",false);

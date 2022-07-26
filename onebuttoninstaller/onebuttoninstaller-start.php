@@ -38,23 +38,20 @@ $app = [
 	'repository.url' => 'https://github.com/' . $app['repository.path'] . $app['config.name'],
 	'repository.raw' => 'https://raw.github.com/' . $app['repository.path'] . $app['config.name']
 ];
-$rootfolder = dirname(__FILE__);
-if(is_link("/usr/local/share/locale-{$app['config.name']}")):
-	unlink("/usr/local/share/locale-{$app['config.name']}");
-endif;
-if(is_link("/usr/local/www/{$app['config.name']}.php")):
-	unlink("/usr/local/www/{$app['config.name']}.php");
-endif;
-if(is_link("/usr/local/www/{$app['config.name']}-config.php")):
-	unlink("/usr/local/www/{$app['config.name']}-config.php");
-endif;
-if(is_link("/usr/local/www/{$app['config.name']}-update_extension.php")):
-	unlink("/usr/local/www/{$app['config.name']}-update_extension.php");
-endif;
-if(is_link("/usr/local/www/ext/{$app['config.name']}")):
-	unlink("/usr/local/www/ext/{$app['config.name']}");
-endif;
+$fqfn = [
+	sprintf('/usr/local/share/locale-%s',$app['config.name']),
+	sprintf('/usr/local/www/%s.php',$app['config.name']),
+	sprintf('/usr/local/www/%s-config.php',$app['config.name']),
+	sprintf("/usr/local/www/%s-update_extension.php",$app['config.name']),
+	sprintf("/usr/local/www/ext/%s",$app['config.name'])
+];
+foreach($fqfn as $f):
+	if(is_link($f)):
+		unlink($f);
+	endif;
+endforeach;
 mwexec('rmdir -p /usr/local/www/ext');
+$rootfolder = dirname(__FILE__);
 $return_val = 0;
 //	create links to extension files
 $return_val += mwexec("ln -sw {$rootfolder}/locale-{$app['config.name']} /usr/local/share/",true);

@@ -2,28 +2,28 @@
 /*
 	extension-lib.inc
 
-    Copyright (c) 2016 - 2020 Andreas Schmidhuber
-    All rights reserved.
+	Copyright (c) 2016 - 2020 Andreas Schmidhuber
+	All rights reserved.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
 
-    1. Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
+	1. Redistributions of source code must retain the above copyright notice, this
+	   list of conditions and the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	   this list of conditions and the following disclaimer in the documentation
+	   and/or other materials provided with the distribution.
 
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 require_once 'autoload.php';
@@ -50,7 +50,7 @@ $extension_lib_version = '1.4';
  * 		package manifest array
  */
 if(!function_exists('ext_load_package')):
-    function ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder) {
+	function ext_load_package($pkgName,$pkgFileNameNeeded,$rootfolder) {
 		$manifest = ext_load_config("{$rootfolder}/bin/{$pkgName}/+MANIFEST");
 		if($manifest !== false):
 //			currently installed pkg
@@ -71,21 +71,21 @@ if(!function_exists('ext_load_package')):
 				$pkgInstalledVersion = "{$manifest['name']}-{$manifest['version']}";
 			endif;
 		endif;
-		echo "Needed   : ",$pkgNeeded,"\n";
-		echo "Installed: ",$pkgInstalledVersion,"\n";
+		echo 'Needed   : ',$pkgNeeded,"\n";
+		echo 'Installed: ',$pkgInstalledVersion,"\n";
 		return $manifest;
 	}
 endif;
 /*	function ext_check_release
  *	checks current release against a minimal neccessary release
  *	params:
- *		$min_release:	a float string to compare with the current used release, e.g.: 9.3, 10.3.0.3.2853 => 10.3032853, 11.0
+ *		$min_release: float string to compare with the current used release, e.g.: 9.3, 10.3.0.3.2853 => 10.3032853, 11.0
  *	return:
  * 		true	=> current release >= minimal release
  * 		false	=> current release < minimal release
  */
 if(!function_exists('ext_check_release')):
-    function ext_check_release($min_release) {
+	function ext_check_release($min_release) {
 		global $config;
 
 //		p.version = 10.3.0.3, p.revision = 2853
@@ -112,7 +112,7 @@ endif;
  * 		$shutdown:	uuid or false
  */
 if(!function_exists('ext_create_rc_commands')):
-    function ext_create_rc_commands($appname,&$postinit = false,&$shutdown = false,$start_action = 'Start',$stop_action = 'Stop') {
+	function ext_create_rc_commands($appname,&$postinit = false,&$shutdown = false,$start_action = 'Start',$stop_action = 'Stop') {
 		global $config;
 
 //		new rc format
@@ -148,16 +148,16 @@ if(!function_exists('ext_create_rc_commands')):
 			endif;
 		else:
 			if(($postinit !== false) && !empty($postinit)):
-			    $config['rc']['postinit']['cmd'][] = $postinit;
+				$config['rc']['postinit']['cmd'][] = $postinit;
 				$postinit = false;
 			endif;
 			if(($shutdown !== false) && !empty($shutdown)):
-			    $config['rc']['shutdown']['cmd'][] = $shutdown;
+				$config['rc']['shutdown']['cmd'][] = $shutdown;
 				$shutdown = false;
 			endif;
 		endif;
 		write_config();
-    }
+	}
 endif;
 /*	function ext_remove_rc_commands
  *	remove postinit / shutdown commands from rc array for both NAS4Free < 11.x and >= 11.x series
@@ -165,37 +165,54 @@ endif;
  *		$config_name:	string to identify the rc command entry in rc|postinit/shutdown|cmd or rc|param|value
  */
 if(!function_exists('ext_remove_rc_commands')):
-    function ext_remove_rc_commands($config_name) {
+	function ext_remove_rc_commands($config_name) {
 		global $config;
 
-//		remove existing old rc format entries
-		if(is_array($config['rc']) && is_array($config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])):
-		    $rc_param_count = count($config['rc']['postinit']['cmd']);
-		    for($i = 0;$i < $rc_param_count;$i++):
-		        if(preg_match("/{$config_name}/",$config['rc']['postinit']['cmd'][$i])):
-					unset($config['rc']['postinit']['cmd'][$i]);
-				endif;
-			endfor;
+		$config_has_changed = false;
+		if(array_key_exists('rc',$config) && is_array($config['rc'])):
+//			remove existing old rc format entries
+			if(array_key_exists('postinit',$config['rc']) && is_array($config['rc']['postinit']) && array_key_exists('cmd',$config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])):
+				$rc_param = &$config['rc']['postinit']['cmd'];
+				$rc_param_count = count($rc_param);
+				for($i = 0;$i < $rc_param_count;$i++):
+					if(preg_match("/{$config_name}/",$rc_param[$i])):
+						unset($rc_param[$i]);
+						$config_has_changed = true;
+					endif;
+				endfor;
+				unset($rc_param);
+			endif;
+//			remove existing old rc format entries
+			if(array_key_exists('shutdown',$config['rc']) && is_array($config['rc']['shutdown']) && array_key_exists('cmd',$config['rc']['shutdown']) && is_array( $config['rc']['shutdown']['cmd'])):
+				$rc_param = &$config['rc']['shutdown']['cmd'];
+				$rc_param_count = count($rc_param);
+				for($i = 0;$i < $rc_param_count;$i++):
+					if(preg_match("/{$config_name}/",$rc_param[$i])):
+						unset($rc_param[$i]);
+						$config_has_changed = true;
+					endif;
+				endfor;
+				unset($rc_param);
+			endif;
+//			remove existing entries for new rc format
+			if(array_key_exists('param',$config['rc']) && is_array($config['rc']['param'])):
+				$rc_param = &$config['rc']['param'];
+				$rc_param_count = count($rc_param);
+				for($i = 0;$i < $rc_param_count;$i++):
+					if(array_key_exists('value',$rc_param[$i]) && is_scalar($rc_param[$i]['value'])):
+						if(preg_match("/{$config_name}/",$rc_param[$i]['value'])):
+							unset($rc_param[$i]);
+							$config_has_changed = true;
+						endif;
+					endif;
+				endfor;
+				unset($rc_param);
+			endif;
 		endif;
-		if(is_array($config['rc']) && is_array($config['rc']['shutdown']) && is_array( $config['rc']['shutdown']['cmd'])):
-		    $rc_param_count = count($config['rc']['shutdown']['cmd']);
-		    for($i = 0;$i < $rc_param_count;$i++):
-		        if(preg_match("/{$config_name}/",$config['rc']['shutdown']['cmd'][$i])):
-					unset($config['rc']['shutdown']['cmd'][$i]);
-				endif;
-		    endfor;
+		if($config_has_changed):
+			write_config();
 		endif;
-//		remove existing entries for new rc format
-		if(is_array($config['rc']) && is_array($config['rc']['param']['0'])):
-			$rc_param_count = count($config['rc']['param']);
-		    for($i = 0;$i < $rc_param_count;$i++):
-		        if(preg_match("/{$config_name}/",$config['rc']['param'][$i]['value'])):
-					unset($config['rc']['param'][$i]);
-				endif;
-			endfor;
-		endif;
-		write_config();
-    }
+	}
 endif;
 /*	function ext_check_version
  *	checks an extension if a new version exists against the currently installed version
@@ -210,20 +227,27 @@ endif;
  * 		or false: 	Github version could not be retrieved
  */
 if(!function_exists('ext_check_version')):
-    function ext_check_version($test_filename,$extension_name,$current_version,$button_name) {
-		global $config;
-		if(!is_file($test_filename) || filemtime($test_filename) < time() - 86400):	// test if file exists or is older than 24 hours
-			$return_val = mwexec("fetch -o {$test_filename} https://raw.github.com/crestAT/nas4free-{$extension_name}/master/{$extension_name}/version.txt",false);
+	function ext_check_version($test_filename,$extension_name,$current_version,$button_name) {
+		global $app;
+
+		$return_value = false;
+//		test if file exists or is older than 24 hours
+		if(!is_file($test_filename) || filemtime($test_filename) < (time() - 86400)):
+			$fetch_file = escapeshellarg($test_filename);
+			$fetch_url = escapeshellarg(sprintf('%s/master/%s/version.txt',$app['repository.raw'],$extension_name));
+			$fetch_cmd = sprintf('fetch --no-verify-hostname --no-verify-peer -o %s %s',$fetch_file,$fetch_url);
+			$return_val = mwexec($fetch_cmd,false);
 			if($return_val == 0):
-			    $server_version = exec("cat {$test_filename}");
-			    if($server_version != $current_version):
-					return sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"),$server_version,$button_name) . '<br />';
+				$cat_file = escapeshellarg($test_filename);
+				$cat_cmd = sprintf('cat %s',$cat_file);
+				$server_version = exec($cat_cmd);
+				if($server_version != $current_version):
+					$return_value = sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"),$server_version,$button_name) . '<br />';
 				endif;
-			else:
-				return false;
 			endif;
 		endif;
-    }
+		return $return_value;
+	}
 endif;
 /*	function ext_load_config
  *	loads a json formatted array from a standalone file
@@ -234,22 +258,22 @@ endif;
  * 		or false:	config file not found or content not retrievable
  */
 if(!function_exists('ext_load_config')):
-    function ext_load_config($config_file,$assoc = true,$depth = 512,$options = 0) {
-        if(is_file($config_file)):
+	function ext_load_config($config_file,$assoc = true,$depth = 512,$options = 0) {
+		if(is_file($config_file)):
 			$config_data = file_get_contents($config_file);
-            if($config_data === false):
+			if($config_data === false):
 				return false;
 			endif;
-            $config_data = json_decode($config_data,$assoc,$depth,$options);
+			$config_data = json_decode($config_data,$assoc,$depth,$options);
 			if(is_array($config_data)):
 				return $config_data;
 			else:
 				return false;
 			endif;
-        else:
+		else:
 			return false;
 		endif;
-    }
+	}
 endif;
 /*	function ext_save_config
  *	loads a json formatted array from a standalone file
@@ -260,9 +284,9 @@ endif;
  * 		error condition
  */
 if (!function_exists('ext_save_config')):
-    function ext_save_config($config_file,$config_data){
-    	header("Content-Type: application/json; UTF-8\n");
-        file_put_contents($config_file,json_encode($config_data,JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ));
-        return json_last_error();
-    }
+	function ext_save_config($config_file,$config_data){
+		header("Content-Type: application/json; UTF-8\n");
+		file_put_contents($config_file,json_encode($config_data,JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ));
+		return json_last_error();
+	}
 endif;

@@ -44,14 +44,14 @@ if(is_file('/usr/local/www/bar_left.gif')):
 else:
 	$image_path = 'images/';
 endif;
-$config_file = "ext/{$app['config.name']}/{$app['config.name']}.conf";
+$config_file = sprintf('ext/%1$s/%1$s.conf',$app['config.name']);
 require_once "ext/{$app['config.name']}/extension-lib.inc";
 $domain = strtolower(get_product_name());
 $localeOSDirectory = '/usr/local/share/locale';
 $localeExtDirectory = "/usr/local/share/locale-{$app['config.name']}";
 bindtextdomain($domain,$localeExtDirectory);
 $configuration = ext_load_config($config_file);
-if($configuration === false):
+if(!is_array($configuration)):
 	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$app['config.name']}.conf");
 	$configuration = [];
 endif;
@@ -73,7 +73,7 @@ endif;
 $configurationStoragePath = $configuration['storage_path'];
 $platform = $g['platform'];
 if($platform == 'livecd' || $platform == 'liveusb'):
-	$input_errors[] = sprintf(gettext("Attention: the used platform '%s' is not recommended for extensions! After a reboot all extensions will no longer be available, use embedded or full platform instead!"),$platform);
+	$input_errors[] = sprintf(gettext("Attention: the used platform '%s' is not recommended for extensions! After a reboot, all extensions will no longer be available, use embedded or full platform instead!"),$platform);
 endif;
 $pgtitle = [gettext('Extensions'),$configuration['appname'] . ' ' . $configuration['version']];
 $pingServer = 'github.com';
@@ -84,31 +84,31 @@ endif;
 $log = 0;
 $loginfo = [
 	[
-    	'visible' => true,
-    	'desc' => gettext('Extensions'),
-    	'logfile' => "{$configuration['rootfolder']}/extensions.txt",
-    	'filename' => 'extensions.txt',
-    	'type' => 'plain',
+		'visible' => true,
+		'desc' => gettext('Extensions'),
+		'logfile' => "{$configuration['rootfolder']}/extensions.txt",
+		'filename' => 'extensions.txt',
+		'type' => 'plain',
 		'pattern' => '/^(.*)###(.*)###(.*)###(.*)###(.*)###(.*)###(.*)$/',
-    	'columns' => [
-    		['title' => gettext('Extension'),'class' => 'listlr','param' => 'align="left" valign="middle" style="font-weight:bold" nowrap','pmid' => 0],
-    		['title' => gettext('Version'),'class' => 'listr','param' => 'align="center" valign="middle"','pmid' => 1],
-    		['title' => gettext('Description'),'class' => 'listr','param' => 'align="left" valign="middle"','pmid' => 5],
-    		['title' => gettext('Install'),'class' => 'listr','param' => 'align="center" valign="middle"','pmid' => 4]
-    	]
+		'columns' => [
+			['title' => gettext('Extension'),'class' => 'listlr','param' => 'align="left" valign="middle" style="font-weight:bold" nowrap','pmid' => 0],
+			['title' => gettext('Version'),'class' => 'listr','param' => 'align="center" valign="middle"','pmid' => 1],
+			['title' => gettext('Description'),'class' => 'listr','param' => 'align="left" valign="middle"','pmid' => 5],
+			['title' => gettext('Install'),'class' => 'listr','param' => 'align="center" valign="middle"','pmid' => 4]
+		]
 	]
 ];
 //	create FreeBSD $current_release for min_release check
 $product_version = explode('.',get_product_version());
 $current_release = $product_version[0] . '.' . $product_version[1] . $product_version[2] . $product_version[3] . get_product_revision();
 function check_min_release($min_release) {
-    global $current_release;
+	global $current_release;
 
-    if(is_float(floatval($min_release))):
-        if($current_release < floatval($min_release)):
+	if(is_float(floatval($min_release))):
+		if($current_release < floatval($min_release)):
 //			release not supported
 			return false;
-        else:
+		else:
 //			release supported
 			return true;
 		endif;
@@ -117,38 +117,41 @@ function check_min_release($min_release) {
 		return true;
 	endif;
 }
-//$sup="10.3032898";        // CHECK
-//if (check_min_release($sup)) $savemsg .= "{$sup} = SUPPORTED";
-//else $savemsg .= "{$sup} = NOT SUPPORTED";
+//	$sup="10.3032898";
+//	CHECK
+//	if(check_min_release($sup)):
+//		$savemsg .= "{$sup} = SUPPORTED";
+//	else:
+//		$savemsg .= "{$sup} = NOT SUPPORTED";
+//	endif;
 function log_get_contents($logfile) {
 	$content = [];
-    if(is_file($logfile)):
+	if(is_file($logfile)):
 		exec("cat {$logfile}",$extensions);
-    else:
+	else:
 		return;
 	endif;
-    $content = $extensions;
+	$content = $extensions;
 	return $content;
 }
-
 function log_get_status($cmd_entry) {
-    global $config;
+	global $config;
 
-    $rc_cmd_entry_found = false;
+	$rc_cmd_entry_found = false;
 //	old rc format
 	if(is_array($config['rc']) && is_array($config['rc']['postinit']) && is_array( $config['rc']['postinit']['cmd'])):
 		$rc_param_count = count($config['rc']['postinit']['cmd']);
-        for($i = 0; $i < $rc_param_count; $i++):
+		for($i = 0;$i < $rc_param_count;$i++):
 			if(preg_match("/{$cmd_entry}/",$config['rc']['postinit']['cmd'][$i])):
 				$rc_cmd_entry_found = true;
 				break;
 			endif;
 		endfor;
-    endif;
+	endif;
 //	new rc format 11.
 	if(is_array($config['rc']) && is_array($config['rc']['param'])):
 		$rc_param_count = count($config['rc']['param']);
-	    for($i = 0;$i < $rc_param_count;$i++):
+		for($i = 0;$i < $rc_param_count;$i++):
 			if(preg_match("/{$cmd_entry}/",$config['rc']['param'][$i]['value'])):
 				$rc_cmd_entry_found = true;
 				break;
@@ -158,13 +161,13 @@ function log_get_status($cmd_entry) {
 	if($rc_cmd_entry_found):
 //		0 = no entry, extension is not installed
 		return 1;
-    else:
+	else:
 //		1 = entry found, extension is already installed
 		return 0;
 	endif;
 }
 function log_display($loginfo) {
-    global $g,$config,$configuration,$savemsg,$image_path;
+	global $g,$config,$configuration,$savemsg,$image_path;
 
 	if(!is_array($loginfo)):
 		return;
@@ -180,72 +183,78 @@ function log_display($loginfo) {
 	if(empty($content)):
 		return;
 	endif;
-    sort($content);
-    $j = 0;
+	sort($content);
+	$j = 0;
 /*
  * EXTENSIONS.TXT format description: PARAMETER DELIMITER -> ###
- *                      PMID    COMMENT
- * name:                0       extension name
- * version:             1       extension version (base for config entry - could change for newer versions), check for beta releases
- * xmlstring:           2       config.xml or installation directory
- * command(list)1:      3       execution of SHELL commands / scripts (e.g. download installer, untar, chmod, ...)
- * command(list)2:      4       empty ("-") or PHP script name (file MUST exist)
- * description:         5       plain text which can include HTML tags
- * unsupported          6       unsupported architecture, plattform, release
- *                              architectures:   x86, x64, rpi, rpi2, bananapi
- *                              platforms:       embedded, full, livecd, liveusb
- *                              releases:        9.3, 10.2, 10.3032853, 10.3032898, 11.0, ...
+ *						PMID	COMMENT
+ * name:				0		extension name
+ * version:				1		extension version (base for config entry - could change for newer versions), check for beta releases
+ * xmlstring:			2		config.xml or installation directory
+ * command(list)1:		3		execution of SHELL commands / scripts (e.g. download installer, untar, chmod, ...)
+ * command(list)2:		4		empty ("-") or PHP script name (file MUST exist)
+ * description:			5		plain text which can include HTML tags
+ * unsupported			6		unsupported architecture, plattform, release
+ *								architectures:	x86, x64, rpi, rpi2, bananapi
+ *								platforms:		embedded, full, livecd, liveusb
+ *								releases:		9.3, 10.2, 10.3032853, 10.3032898, 11.0, ...
  */
 //	Create table data
-	foreach($content as $contentv):                                   // handle each line => one extension
+//	handle each line => one extension
+	foreach($content as $contentv):
 		unset($result);
-        $result = explode('###',$contentv);                            // retrieve extension content (pmid based)
+//		retrieve extension content (pmid based)
+		$result = explode('###',$contentv);
 		if(($result === false) || ($result == 0)):
 			continue;
 		endif;
 		echo "<tr valign=\"top\">\n";
-		for($i = 0;$i < count($loginfo['columns']);$i++):           // handle pmids (columns)
-            if(!$configuration['show_beta'] && (strpos($result[1],'RELEASE') === false)):
-				continue;     //check for beta state
-            else:
-                if($i == count($loginfo['columns']) - 1):
-                    if(!empty($result[6])):                           // something unsupported exist
-                        $unsupported = explode(',',str_replace(' ','',$result[6]));
-                        for($k = 0;$k < count($unsupported);$k++):  // check for unsupported release / architecture / platforms
-                            if(!check_min_release($unsupported[$k]) || ($unsupported[$k] == $g['arch']) || ($unsupported[$k] == $g['platform'])):
-                                echo "<td {$loginfo['columns'][$i]['param']} class='{$loginfo['columns'][$i]['class']}'> <img src='{$image_path}status_disabled.png' border='0' alt='' title='".gettext('Unsupported architecture/platform/release').': '.$unsupported[$k]."' /></td>\n";
-                                continue 2;                             // unsupported, therefore we leave and proceed to the next extension in the list
-                            endif;
-                        endfor;
-                    endif;
+//		handle pmids (columns)
+		for($i = 0;$i < count($loginfo['columns']);$i++):
+			if(!$configuration['show_beta'] && (strpos($result[1],'RELEASE') === false)):
+//				check for beta state
+				continue;
+			else:
+				if($i == count($loginfo['columns']) - 1):
+//					something unsupported exist
+					if(!empty($result[6])):
+						$unsupported = explode(',',str_replace(' ','',$result[6]));
+						for($k = 0;$k < count($unsupported);$k++):  // check for unsupported release / architecture / platforms
+							if(!check_min_release($unsupported[$k]) || ($unsupported[$k] == $g['arch']) || ($unsupported[$k] == $g['platform'])):
+								echo "<td {$loginfo['columns'][$i]['param']} class='{$loginfo['columns'][$i]['class']}'> <img src='{$image_path}status_disabled.png' border='0' alt='' title='".gettext('Unsupported architecture/platform/release').': '.$unsupported[$k]."' /></td>\n";
+//								unsupported, therefore we leave and proceed to the next extension in the list
+								continue 2;
+							endif;
+						endfor;
+					endif;
 //					check if extension is already installed (existing config.xml or postinit cmd entry)
-                    $already_installed = false;
-                    echo "<td {$loginfo['columns'][$i]['param']} class='{$loginfo['columns'][$i]['class']}' ";
-                    if((isset($config[$result[2]])) || (log_get_status($result[2]) == 1)):
-                        echo "><img src='{$image_path}status_enabled.png' border='0' alt='' title='".gettext('Enabled')."' /";
-                        $already_installed = true;
-                    endif;
-                    if(!$already_installed || $configuration['re_install']):
+					$already_installed = false;
+					echo "<td {$loginfo['columns'][$i]['param']} class='{$loginfo['columns'][$i]['class']}' ";
+					if((isset($config[$result[2]])) || (log_get_status($result[2]) == 1)):
+						echo "><img src='{$image_path}status_enabled.png' border='0' alt='' title='".gettext('Enabled')."' /";
+						$already_installed = true;
+					endif;
+					if(!$already_installed || $configuration['re_install']):
 //						data for installation
-                        echo "><input title='".gettext('Select to install')."' type='checkbox' name='name[".$j."][extension]' value='".$result[2]."' />
-                            <input type='hidden' name='name[".$j."][truename]' value='".$result[0]."' />
-                            <input type='hidden' name='name[".$j."][command1]' value='".$result[3]."' />
-                            <input type='hidden' name='name[".$j."][command2]' value='".$result[4]."' />";
-                    endif;
-                    echo "</td>\n";
+						echo "><input title='".gettext('Select to install')."' type='checkbox' name='name[".$j."][extension]' value='".$result[2]."' />
+							<input type='hidden' name='name[".$j."][truename]' value='".$result[0]."' />
+							<input type='hidden' name='name[".$j."][command1]' value='".$result[3]."' />
+							<input type='hidden' name='name[".$j."][command2]' value='".$result[4]."' />";
+					endif;
+					echo "</td>\n";
 //					EOcount
-                else:
+				else:
 					echo "<td {$loginfo['columns'][$i]['param']} class='{$loginfo['columns'][$i]['class']}'>" . $result[$loginfo['columns'][$i]['pmid']] . "</td>\n";
 				endif;
-            endif;	//EObeta-check
+			endif;	//EObeta-check
 		endfor;  // EOcolumns
 		echo "</tr>\n";
 		$j++;
 	endforeach;
 }
 if(isset($_POST['cleanup'],$_POST['name'])):
-    foreach($_POST['name'] as $line):
-        if(isset($line['extension'])):
+	foreach($_POST['name'] as $line):
+		if(isset($line['extension'])):
 			ext_remove_rc_commands($line['extension']);						// remove entry from command scripts
 			unset($config[$line['extension']]);								// remove entry from config.xml
 			if($line['extension'] == 'plexinit'):
@@ -255,50 +264,58 @@ if(isset($_POST['cleanup'],$_POST['name'])):
 				unlink("/usr/local/www/ext/{$line['extension']}/menu.inc");	// remove entry from extensions menu
 			endif;
 			write_config();
-            $savemsg .= gettext('Cleanup') . ": <b>{$line['truename']} ({$line['extension']})</b>" . '<br />';
+			$savemsg .= gettext('Cleanup') . ": <b>{$line['truename']} ({$line['extension']})</b>" . '<br />';
 		endif;
 	endforeach;
 endif;
 if(isset($_POST['install'],$_POST['name'])):
-    foreach($_POST['name'] as $line):
-        if(isset($line['extension'])):
+	foreach($_POST['name'] as $line):
+		if(isset($line['extension'])):
 			ext_remove_rc_commands($line['extension']);					// to force correct command script entries in case of recovered/changed config/directories for extensions
 			unset($config[$line['extension']]);
 			write_config();
-            $savemsg .= gettext('Installation') . ": <b>{$line['truename']}</b>" . "<br />";
-            unset($result);
-            exec("cd {$configurationStoragePath} && {$line['command1']}",$result,$return_val);
-            if($return_val == 0):
-            	foreach($result as $msg):
-					$savemsg .= $msg . '<br />';    // output on success
+			$savemsg .= gettext('Installation') . ": <b>{$line['truename']}</b>" . "<br />";
+			unset($result);
+			exec("cd {$configurationStoragePath} && {$line['command1']}",$result,$return_val);
+			if($return_val == 0):
+				foreach($result as $msg):
+//					output on success
+					$savemsg .= $msg . '<br />';
 				endforeach;
-                unset($result);
-                if("{$line['command2']}" != '-'):                     // check if a PHP script must be execut
-                    if(file_exists("{$configurationStoragePath}/{$line['command2']}")):
-                        $savemsg_old = $savemsg;                        // save messages for use after output buffering ends
-                        ob_start();                                     // start output buffering
-                        include "{$configurationStoragePath}/{$line['command2']}";
-                        $ausgabe = ob_get_contents();                   // get outputs from include command
-                        ob_end_clean();                                 // close output buffering
-                        $savemsg = $savemsg_old;                        // recover saved messages ...
-                        $savemsg .= str_replace("\n","<br />",$ausgabe) . "<br />";     // ... and append messages from include command
-                    else:
+				unset($result);
+//				check if a PHP script must be executed
+				if("{$line['command2']}" != '-'):
+					if(file_exists("{$configurationStoragePath}/{$line['command2']}")):
+//						save messages for use after output buffering ends
+						$savemsg_old = $savemsg;
+//						start output buffering
+						ob_start();
+						include "{$configurationStoragePath}/{$line['command2']}";
+//						get outputs from include command
+						$ausgabe = ob_get_contents();
+//						close output buffering
+						ob_end_clean();
+//						recover saved messages ...
+						$savemsg = $savemsg_old;
+//						and append messages from include command
+						$savemsg .= str_replace("\n","<br />",$ausgabe) . "<br />";
+					else:
 						$errormsg .= sprintf(gettext("PHP script %s not found!"),"{$configurationStoragePath}/{$line['command2']}") . '<br />';
 					endif;
-                endif;
-//				EOcommand1 OK
-            else:                                                     // throw error message for command1
-                $errormsg .= gettext('Installation error') . ": <b>{$line['truename']}</b>" . '<br />';
-            	foreach ($result as $msg):
+				endif;
+			else:
+//				throw error message for command1
+				$errormsg .= gettext('Installation error') . ": <b>{$line['truename']}</b>" . '<br />';
+				foreach ($result as $msg):
 					$errormsg .= $msg . '<br />';
 				endforeach;
-            endif;   // EOcommand1 NOK
-        endif;   // EOisset line
-    endforeach;   // EOforeach
-endif; // EOinstall
+			endif;
+		endif;
+	endforeach;
+endif;
 //	to prevent collisions with installed extension definitions
-$configuration = ext_load_config('ext/onebuttoninstaller/onebuttoninstaller.conf');
-if($configuration === false):
+$configuration = ext_load_config($config_file);
+if(!is_array($configuration)):
 	$configuration = [];
 endif;
 //	default configuration
@@ -317,10 +334,10 @@ $configuration['rc_uuid_start'] ??= '';
 $configuration['rc_uuid_stop'] ??= '';
 //	extensions list file handling for => manual update | auto update | missing file | file older than 24 hours
 if(isset($_POST['update']) || ($configuration['auto_update'] && !isset($_POST['install'])) || !is_file("{$configuration['rootfolder']}/extensions.txt") || filemtime("{$configuration['rootfolder']}/extensions.txt") < time() - 86400):
-	$return_val = mwexec("fetch -o {$configuration['rootfolder']}/extensions.txt {$app['repository.raw']}/master/onebuttoninstaller/extensions.txt",false);
-    if($return_val == 0):
+	$return_val = mwexec("fetch --no-verify-hostname --no-verify-peer -o {$configuration['rootfolder']}/extensions.txt {$app['repository.raw']}/master/onebuttoninstaller/extensions.txt",false);
+	if($return_val == 0):
 		$savemsg .= gettext('New extensions list successfully downloaded!') . '<br />';
-    else:
+	else:
 		$errormsg .= gettext('Unable to retrieve extensions list from server!') . '<br />';
 	endif;
 endif;   // EOupdate
@@ -336,8 +353,8 @@ include 'fbegin.inc';
 bindtextdomain($domain,$localeExtDirectory);
 ?>
 <form action="<?php echo $app['config.name']; ?>.php" method="post" name="iform" id="iform" onsubmit="spinner()">
-    <table width="100%" border="0" cellpadding="0" cellspacing="0">
-    	<tr>
+	<table width="100%" border="0" cellpadding="0" cellspacing="0">
+		<tr>
 			<td class="tabnavtbl">
 				<ul id="tabnav">
 					<li class="tabact"><a href="onebuttoninstaller.php"><span><?=gettext("Install");?></span></a></li>
@@ -346,7 +363,7 @@ bindtextdomain($domain,$localeExtDirectory);
 				</ul>
 			</td>
 		</tr>
-    	<tr>
+		<tr>
 			<td class="tabcont">
 <?php
 				if(!empty($input_errors)):
@@ -397,7 +414,7 @@ bindtextdomain($domain,$localeExtDirectory);
 ?>
 			</td>
 		</tr>
-    </table>
+	</table>
 </form>
 <?php
 include 'fend.inc';

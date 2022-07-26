@@ -30,10 +30,6 @@ require_once 'autoload.php';
 require_once 'auth.inc';
 require_once 'guiconfig.inc';
 
-//	fix fetch command
-putenv('SSL_NO_VERIFY_HOSTNAME=1');
-putenv('SSL_NO_VERIFY_PEER=1');
-
 $app = [
 	'name' => 'OneButtonInstaller',
 	'version' => 'v0.4.1',
@@ -52,10 +48,8 @@ $localeOSDirectory = "/usr/local/share/locale";
 $localeExtDirectory = "/usr/local/share/locale-{$app['config.name']}";
 bindtextdomain($domain,$localeExtDirectory);
 $configuration = ext_load_config($config_file);
-if($configuration === false):
-	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$app['config.name']}.conf");
-endif;
 if(!is_array($configuration)):
+	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$app['config.name']}.conf");
 	$configuration = [];
 endif;
 //	default configuration
@@ -80,13 +74,13 @@ $pgtitle = [gettext('Extensions'),gettext($configuration['appname']) . ' ' . $co
 if(is_file("{$configuration['rootfolder']}/oneload")):
 	require_once "{$configuration['rootfolder']}/oneload";
 endif;
-$return_val = mwexec("fetch -o {$configuration['rootfolder']}/version_server.txt {$app['repository.raw']}/master/{$app['config.name']}/version.txt",false);
+$return_val = mwexec("fetch --no-verify-hostname --no-verify-peer -o {$configuration['rootfolder']}/version_server.txt {$app['repository.raw']}/master/{$app['config.name']}/version.txt",false);
 if($return_val == 0):
-    $server_version = exec("cat {$configuration['rootfolder']}/version_server.txt");
-    if($server_version != $configuration['version']):
+	$server_version = exec("cat {$configuration['rootfolder']}/version_server.txt");
+	if($server_version != $configuration['version']):
 		$savemsg .= sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"),$server_version,gettext('Update Extension'));
 	endif;
-    mwexec("fetch -o {$configuration['rootfolder']}/release_notes.txt {$app['repository.raw']}/master/{$app['config.name']}/release_notes.txt",false);
+	mwexec("fetch --no-verify-hostname --no-verify-peer -o {$configuration['rootfolder']}/release_notes.txt {$app['repository.raw']}/master/{$app['config.name']}/release_notes.txt",false);
 else:
 	$server_version = gettext('Unable to retrieve version from server!');
 endif;
@@ -94,15 +88,15 @@ if(isset($_POST['ext_remove']) && $_POST['ext_remove']):
 //	remove start/stop commands
 	ext_remove_rc_commands($app['config.name']);
 //	remove extension pages/links
-    require_once "{$configuration['rootfolder']}/{$app['config.name']}-stop.php";
+	require_once "{$configuration['rootfolder']}/{$app['config.name']}-stop.php";
 	header("Location: index.php");
 endif;
 if(isset($_POST['ext_update']) && $_POST['ext_update']):
 //	download installer & install
-    $return_val = mwexec("fetch -vo {$configuration['rootfolder']}/{$app['config.name']}-install.php '{$app['repository.raw']}/master/{$app['config.name']}/{$app['config.name']}-install.php'",false);
-    if($return_val == 0):
-        require_once "{$configuration['rootfolder']}/{$app['config.name']}-install.php";
-        header('Refresh:8');
+	$return_val = mwexec("fetch --no-verify-hostname --no-verify-peer -vo {$configuration['rootfolder']}/{$app['config.name']}-install.php '{$app['repository.raw']}/master/{$app['config.name']}/{$app['config.name']}-install.php'",false);
+	if($return_val == 0):
+		require_once "{$configuration['rootfolder']}/{$app['config.name']}-install.php";
+		header('Refresh:8');
 	else:
 		$input_errors[] = sprintf(gettext('Download of installation file %s failed, installation aborted!'),"{$app['config.name']}-install.php");
 	endif;

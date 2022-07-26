@@ -32,10 +32,6 @@ require_once 'guiconfig.inc';
 
 use common\arr;
 
-//	fix for fetch command
-putenv('SSL_NO_VERIFY_HOSTNAME=1');
-putenv('SSL_NO_VERIFY_PEER=1');
-
 $app = [
 	'name' => 'OneButtonInstaller',
 	'version' => 'v0.4.1',
@@ -45,102 +41,104 @@ $app = [
 	'repository.url' => 'https://github.com/' . $app['repository.path'] . $app['config.name'],
 	'repository.raw' => 'https://raw.github.com/' . $app['repository.path'] . $app['config.name']
 ];
-$release = explode('-',exec('uname -r'));
-if($release < 13):
-	$input_errors[] = sprintf(gettext("Attention: this release '%s' is not compatible to this extension!"),$release);
+
+function change_perms($dir) {
+	global $input_errors;
+
+//	remove trailing slash
+	$path = rtrim($dir,'/');
+	if(strlen($path) > 1):
+//		check if directory exists
+		if(!is_dir($path)):
+			$input_errors[] = sprintf(gettext("Directory %s doesn't exist!"),$path);
+		else:
+//			split path to get directory names
+			$path_check = explode('/',$path);
+//			get path depth
+			$path_elements = count($path_check);
+//			get mountpoint permissions for others
+			$fp = substr(sprintf('%o',fileperms("/$path_check[1]/$path_check[2]")),-1);
+//			transmission needs at least read & search permission at the mountpoint
+			if($fp >= 5):
+//				set to the mountpoint
+				$directory = "/$path_check[1]/$path_check[2]";
+//				traverse the path and set permissions to rx
+				for($i = 3;$i < $path_elements - 1;$i++):
+//					add next level
+					$directory = $directory . "/$path_check[$i]";
+//					set permissions to o=+r+x
+					exec("chmod o=+r+x \"$directory\"");
+				endfor;
+				$path_elements = $path_elements - 1;
+//				add last level
+				$directory = $directory . "/$path_check[$path_elements]";
+//				set permissions to 775
+				exec("chmod 775 {$directory}");
+				exec("chown root {$directory}*");
+			else:
+				$input_errors[] = sprintf(gettext("%s needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."),$app['name'],$path,"/{$path_check[1]}/{$path_check[2]}");
+			endif;
+		endif;
+	endif;
+}
+$php_version_ok = PHP_MAJOR_VERSION >= 8;
+if(!$php_version_ok):
+	$input_errors[] = gettext('Attention: this extension is not compatible with the PHP version of this platform!');
 endif;
-arr::make_branch($config,'onebuttoninstaller');
 $platform = $g['platform'];
 if($platform == 'livecd' || $platform == 'liveusb'):
 	$input_errors[] = sprintf(gettext("Attention: the used platform '%s' is not recommended for extensions! After a reboot all extensions will no longer be available, use embedded or full platform instead!"),$platform);
 endif;
+$app_config = &arr::make_branch($config,$app['config.name']);
 //	Check if the directory exists, the mountpoint has at least o=rx permissions and set the permission to 775 for the last directory in the path
-function change_perms($dir) {
-    global $input_errors;
-
-//	remove trailing slash
-	$path = rtrim($dir,'/');
-    if(strlen($path) > 1):
-//		check if directory exists
-        if(!is_dir($path)):
-            $input_errors[] = sprintf(gettext("Directory %s doesn't exist!"),$path);
-        else:
-//			split path to get directory names
-            $path_check = explode('/',$path);
-//			get path depth
-            $path_elements = count($path_check);
-//			get mountpoint permissions for others
-            $fp = substr(sprintf('%o',fileperms("/$path_check[1]/$path_check[2]")),-1);
-//			transmission needs at least read & search permission at the mountpoint
-            if($fp >= 5):
-//				set to the mountpoint
-                $directory = "/$path_check[1]/$path_check[2]";
-//				traverse the path and set permissions to rx
-                for($i = 3;$i < $path_elements - 1;$i++):
-//					add next level
-                    $directory = $directory . "/$path_check[$i]";
-//					set permissions to o=+r+x
-                    exec("chmod o=+r+x \"$directory\"");
-                endfor;
-                $path_elements = $path_elements - 1;
-//				add last level
-                $directory = $directory . "/$path_check[$path_elements]";
-//				set permissions to 775
-                exec("chmod 775 {$directory}");
-                exec("chown root {$directory}*");
-            else:
-                $input_errors[] = sprintf(gettext("%s needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."),$app['name'],$path,"/{$path_check[1]}/{$path_check[2]}");
-            endif;
-        endif;
-    endif;
-}
 if(isset($_POST['save']) && $_POST['save']):
-    unset($input_errors);
+	unset($input_errors);
 	if(empty($input_errors)):
-        $config['onebuttoninstaller']['storage_path'] = !empty($_POST['storage_path']) ? $_POST['storage_path'] : $g['media_path'];
+		$app_config['storage_path'] = !empty($_POST['storage_path']) ? $_POST['storage_path'] : $g['media_path'];
 //		ensure to have NO trailing slashes
-        $config['onebuttoninstaller']['storage_path'] = rtrim($config['onebuttoninstaller']['storage_path'],'/');
-        if(!isset($_POST['path_check']) && (strpos($config['onebuttoninstaller']['storage_path'],"/mnt/") === false)):
-            $input_errors[] = gettext("The common directory for all extensions MUST be set to a directory below <b>'/mnt/'</b> to prevent to loose the extensions after a reboot on embedded systems!");
-        else:
-            if(!is_dir($config['onebuttoninstaller']['storage_path'])):
-				mkdir($config['onebuttoninstaller']['storage_path'],0775,true);
+		$app_config['storage_path'] = rtrim($app_config['storage_path'],'/');
+		if(!isset($_POST['path_check']) && (strpos($app_config['storage_path'],'/mnt/') === false)):
+			$input_errors[] = gettext("The common directory for all extensions MUST be set to a directory below <b>'/mnt/'</b> to prevent the extensions from being lost after a reboot on embedded systems!");
+		else:
+			if(!is_dir($app_config['storage_path'])):
+				mkdir($app_config['storage_path'],0775,true);
 			endif;
-            change_perms($config['onebuttoninstaller']['storage_path']);
-            $config['onebuttoninstaller']['path_check'] = isset($_POST['path_check']);
-            $install_dir = $config['onebuttoninstaller']['storage_path'] . '/';   // get directory where the installer script resides
-            if(!is_dir("{$install_dir}onebuttoninstaller/log")):
+			change_perms($app_config['storage_path']);
+			$app_config['path_check'] = isset($_POST['path_check']);
+//			get directory where the installer script resides
+			$install_dir = $app_config['storage_path'] . '/';
+			if(!is_dir("{$install_dir}onebuttoninstaller/log")):
 				mkdir("{$install_dir}onebuttoninstaller/log",0775,true);
 			endif;
-            $return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}onebuttoninstaller/onebuttoninstaller-install.php '{$app['repository.raw']}/master/onebuttoninstaller/onebuttoninstaller-install.php'",false);
-            if($return_val == 0):
-                chmod("{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php",0775);
-                require_once "{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php";
-            else:
-                $input_errors[] = sprintf(gettext("Installation file %s not found, installation aborted!"),"{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php");
-                return;
-            endif;
-            mwexec('rm -Rf ext/OBI; rm -f OBI.php',true);
-            header('Location: onebuttoninstaller-config.php');
-        endif;
-    endif;
+			$return_val = mwexec("fetch --no-verify-hostname --no-verify-peer -vo {$install_dir}onebuttoninstaller/onebuttoninstaller-install.php '{$app['repository.raw']}/master/onebuttoninstaller/onebuttoninstaller-install.php'",false);
+			if($return_val == 0):
+				chmod("{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php",0775);
+				require_once "{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php";
+			else:
+				$input_errors[] = sprintf(gettext("Installation file %s not found, installation aborted!"),"{$install_dir}onebuttoninstaller/onebuttoninstaller-install.php");
+				return;
+			endif;
+			mwexec('rm -Rf ext/OBI; rm -f OBI.php',true);
+			header('Location: onebuttoninstaller-config.php');
+		endif;
+	endif;
 endif;
 if(isset($_POST['cancel']) && $_POST['cancel']):
-    $return_val = mwexec('rm -Rf ext/OBI; rm -f OBI.php',true);
-    if($return_val == 0):
+	$return_val = mwexec('rm -Rf ext/OBI; rm -f OBI.php',true);
+	if($return_val == 0):
 		$savemsg .= $app['name'] . ' ' . gettext('not installed');
-    else:
+	else:
 		$input_errors[] = $app['name'] . ' removal failed';
 	endif;
-    header('Location: index.php');
+	header('Location: index.php');
 endif;
-$pconfig['storage_path'] = !empty($config['onebuttoninstaller']['storage_path']) ? $config['onebuttoninstaller']['storage_path'] : $g['media_path'];
-$pconfig['path_check'] = isset($config['onebuttoninstaller']['path_check']);
+$pconfig['storage_path'] = !empty($app_config['storage_path']) ? $app_config['storage_path'] : $g['media_path'];
+$pconfig['path_check'] = isset($app_config['path_check']);
 $pgtitle = [gettext('Extensions'),gettext($app['name']),gettext('Configuration')];
 include 'fbegin.inc';
 ?>
 <form action="OBI.php" method="post" name="iform" id="iform">
-    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+	<table width="100%" border="0" cellpadding="0" cellspacing="0">
 		<tr>
 			<td class="tabcont">
 <?php
@@ -159,7 +157,13 @@ include 'fbegin.inc';
 ?>
 				</table>
 				<div id="submit">
-					<input id="save" name="save" type="submit" class="formbtn" value="<?=gettext('Save');?>"/>
+<?php
+					if($php_version_ok):
+?>
+						<input id="save" name="save" type="submit" class="formbtn" value="<?=gettext('Save');?>"/>
+<?php
+					endif;
+?>
 					<input id="cancel" name="cancel" type="submit" class="formbtn" value="<?=gettext('Cancel');?>"/>
 				</div>
 			</td>
