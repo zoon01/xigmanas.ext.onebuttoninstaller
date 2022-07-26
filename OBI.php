@@ -37,10 +37,10 @@ $app = [
 	'version' => 'v0.4.2',
 	'config.name' => 'onebuttoninstaller',
 //	'repository.path' => 'crestAT/nas4free-',
-	'repository.path' => 'ms49434/xigmanas.ext.',
-	'repository.url' => 'https://github.com/' . $app['repository.path'] . $app['config.name'],
-	'repository.raw' => 'https://raw.github.com/' . $app['repository.path'] . $app['config.name']
+	'repository.path' => 'ms49434/xigmanas.ext.'
 ];
+$app['repository.url'] = 'https://github.com/' . $app['repository.path'] . $app['config.name'];
+$app['repository.raw'] = 'https://raw.github.com/' . $app['repository.path'] . $app['config.name'];
 
 function change_perms($dir) {
 	global $input_errors;

@@ -35,10 +35,11 @@ $app = [
 	'version' => 'v0.4.2',
 	'config.name' => 'onebuttoninstaller',
 //	'repository.path' => 'crestAT/nas4free-',
-	'repository.path' => 'ms49434/xigmanas.ext.',
-	'repository.url' => 'https://github.com/' . $app['repository.path'] . $app['config.name'],
-	'repository.raw' => 'https://raw.github.com/' . $app['repository.path'] . $app['config.name']
+	'repository.path' => 'ms49434/xigmanas.ext.'
 ];
+$app['repository.url'] = 'https://github.com/' . $app['repository.path'] . $app['config.name'];
+$app['repository.raw'] = 'https://raw.github.com/' . $app['repository.path'] . $app['config.name'];
+
 $config_file = "ext/{$app['config.name']}/{$app['config.name']}.conf";
 require_once "ext/{$app['config.name']}/extension-lib.inc";
 $domain = strtolower(get_product_name());
