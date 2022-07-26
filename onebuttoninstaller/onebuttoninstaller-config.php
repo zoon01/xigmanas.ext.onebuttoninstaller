@@ -32,7 +32,7 @@ require_once 'guiconfig.inc';
 
 $app = [
 	'name' => 'OneButtonInstaller',
-	'version' => 'v0.4.1',
+	'version' => 'v0.4.2',
 	'config.name' => 'onebuttoninstaller',
 //	'repository.path' => 'crestAT/nas4free-',
 	'repository.path' => 'ms49434/xigmanas.ext.',
