@@ -34,7 +34,7 @@ use common\arr;
 
 $app = [
 	'name' => 'OneButtonInstaller',
-	'version' => '0.4.2',
+	'version' => 'v0.4.2',
 	'config.name' => 'onebuttoninstaller',
 //	'repository.path' => 'crestAT/nas4free-',
 	'repository.path' => 'ms49434/xigmanas.ext.'
