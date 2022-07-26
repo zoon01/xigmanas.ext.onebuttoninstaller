@@ -2,63 +2,64 @@
 /*
 	onebuttoninstaller.php
 
-    Copyright (c) 2015 - 2020 Andreas Schmidhuber
-    All rights reserved.
+	Copyright (c) 2015 - 2020 Andreas Schmidhuber
+	All rights reserved.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
 
-    1. Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
+	1. Redistributions of source code must retain the above copyright notice, this
+	   list of conditions and the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	   this list of conditions and the following disclaimer in the documentation
+	   and/or other materials provided with the distribution.
 
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+require_once 'autoload.php';
 require_once 'auth.inc';
 require_once 'guiconfig.inc';
 
+$app = [
+	'name' => 'OneButtonInstaller',
+	'version' => 'v0.4.1',
+	'config.name' => 'onebuttoninstaller',
+//	'repository.path' => 'crestAT/nas4free-',
+	'repository.path' => 'ms49434/xigmanas.ext.',
+	'repository.url' => 'https://github.com/' . $app['repository.path'] . $app['config.name'],
+	'repository.raw' => 'https://raw.github.com/' . $app['repository.path'] . $app['config.name']
+];
 if(is_file('/usr/local/www/bar_left.gif')):
 	$image_path = '';
 else:
 	$image_path = 'images/';
 endif;
-
-$application_name = 'OneButtonInstaller';
-$application_version = '0.4.1';
-$config_name = 'onebuttoninstaller';
-//	$ext_repository_path = 'crestAT/nas4free-';
-$ext_repository_path = 'ms49434/xigmanas.ext.';
-$ext_repository_url = 'https://github.com/' . $ext_repository_path . $config_name;
-$ext_repository_raw = 'https://raw.github.com/' . $ext_repository_path . $config_name;
-
-$config_file = "ext/{$config_name}/{$config_name}.conf";
-require_once "ext/{$config_name}/extension-lib.inc";
+$config_file = "ext/{$app['config.name']}/{$app['config.name']}.conf";
+require_once "ext/{$app['config.name']}/extension-lib.inc";
 $domain = strtolower(get_product_name());
 $localeOSDirectory = '/usr/local/share/locale';
-$localeExtDirectory = "/usr/local/share/locale-{$config_name}";
+$localeExtDirectory = "/usr/local/share/locale-{$app['config.name']}";
 bindtextdomain($domain,$localeExtDirectory);
 $configuration = ext_load_config($config_file);
 if($configuration === false):
-	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$config_name}.conf");
+	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$app['config.name']}.conf");
 	$configuration = [];
 endif;
 $configuration['rootfolder'] ??= null;
 $configuration['enable'] ??= false;
 $configuration['storage_path'] ??= null;
-$configuration['appname'] ??= $application_name;
-$configuration['version'] ??= $application_version;
+$configuration['appname'] ??= $app['name'];
+$configuration['version'] ??= $app['version'];
 $configuration['show_beta'] ??= true;
 $configuration['re_install'] ??= false;
 $configuration['auto_update'] ??= false;
@@ -305,8 +306,8 @@ $configuration['rootfolder'] ??= null;
 $configuration['enable'] ??= false;
 $configuration['storage_path'] ??= null;
 $configuration['path_check'] ??= false;
-$configuration['appname'] ??= $application_name;
-$configuration['version'] ??= $application_version;
+$configuration['appname'] ??= $app['name'];
+$configuration['version'] ??= $app['version'];
 $configuration['show_beta'] ??= true;
 $configuration['re_install'] ??= false;
 $configuration['auto_update'] ??= false;
@@ -316,7 +317,7 @@ $configuration['rc_uuid_start'] ??= '';
 $configuration['rc_uuid_stop'] ??= '';
 //	extensions list file handling for => manual update | auto update | missing file | file older than 24 hours
 if(isset($_POST['update']) || ($configuration['auto_update'] && !isset($_POST['install'])) || !is_file("{$configuration['rootfolder']}/extensions.txt") || filemtime("{$configuration['rootfolder']}/extensions.txt") < time() - 86400):
-	$return_val = mwexec("fetch -o {$configuration['rootfolder']}/extensions.txt {$ext_repository_raw}/master/onebuttoninstaller/extensions.txt",false);
+	$return_val = mwexec("fetch -o {$configuration['rootfolder']}/extensions.txt {$app['repository.raw']}/master/onebuttoninstaller/extensions.txt",false);
     if($return_val == 0):
 		$savemsg .= gettext('New extensions list successfully downloaded!') . '<br />';
     else:
@@ -334,7 +335,7 @@ bindtextdomain($domain,$localeOSDirectory);
 include 'fbegin.inc';
 bindtextdomain($domain,$localeExtDirectory);
 ?>
-<form action="<?php echo $config_name; ?>.php" method="post" name="iform" id="iform" onsubmit="spinner()">
+<form action="<?php echo $app['config.name']; ?>.php" method="post" name="iform" id="iform" onsubmit="spinner()">
     <table width="100%" border="0" cellpadding="0" cellspacing="0">
     	<tr>
 			<td class="tabnavtbl">

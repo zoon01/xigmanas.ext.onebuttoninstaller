@@ -1,56 +1,59 @@
 <?php
 /*
-    onebuttoninstaller-update_extension.php
+	onebuttoninstaller-update_extension.php
 
-    Copyright (c) 2015 - 2020 Andreas Schmidhuber
-    All rights reserved.
+	Copyright (c) 2015 - 2020 Andreas Schmidhuber
+	All rights reserved.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
 
-    1. Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
+	1. Redistributions of source code must retain the above copyright notice, this
+	   list of conditions and the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	   this list of conditions and the following disclaimer in the documentation
+	   and/or other materials provided with the distribution.
 
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
+require_once 'autoload.php';
+require_once 'auth.inc';
+require_once 'guiconfig.inc';
 
 //	fix fetch command
 putenv('SSL_NO_VERIFY_HOSTNAME=1');
 putenv('SSL_NO_VERIFY_PEER=1');
 
-$application_name = 'OneButtonInstaller';
-$config_name = 'onebuttoninstaller';
-//	$ext_repository_path = 'crestAT/nas4free-';
-$ext_repository_path = 'ms49434/xigmanas.ext.';
-$ext_repository_url = 'https://github.com/' . $ext_repository_path . $config_name;
-$ext_repository_raw = 'https://raw.github.com/' . $ext_repository_path . $config_name;
+$app = [
+	'name' => 'OneButtonInstaller',
+	'version' => 'v0.4.1',
+	'config.name' => 'onebuttoninstaller',
+//	'repository.path' => 'crestAT/nas4free-',
+	'repository.path' => 'ms49434/xigmanas.ext.',
+	'repository.url' => 'https://github.com/' . $app['repository.path'] . $app['config.name'],
+	'repository.raw' => 'https://raw.github.com/' . $app['repository.path'] . $app['config.name']
+];
+$config_file = "ext/{$app['config.name']}/{$app['config.name']}.conf";
 
-$config_file = "ext/{$config_name}/{$config_name}.conf";
-
-require_once 'autoload.php';
-require_once 'auth.inc';
-require_once 'guiconfig.inc';
-require_once "ext/{$config_name}/extension-lib.inc";
+require_once "ext/{$app['config.name']}/extension-lib.inc";
 
 $domain = strtolower(get_product_name());
 $localeOSDirectory = "/usr/local/share/locale";
-$localeExtDirectory = "/usr/local/share/locale-{$config_name}";
+$localeExtDirectory = "/usr/local/share/locale-{$app['config.name']}";
 bindtextdomain($domain,$localeExtDirectory);
 $configuration = ext_load_config($config_file);
 if($configuration === false):
-	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$config_name}.conf");
+	$input_errors[] = sprintf(gettext('Configuration file %s not found!'),"{$app['config.name']}.conf");
 endif;
 if(!is_array($configuration)):
 	$configuration = [];
@@ -60,8 +63,8 @@ $configuration['rootfolder'] ??= null;
 $configuration['enable'] ??= false;
 $configuration['storage_path'] ??= null;
 $configuration['path_check'] ??= false;
-$configuration['appname'] ??= $application_name;
-$configuration['version'] ??= $application_version;
+$configuration['appname'] ??= $app['name'];
+$configuration['version'] ??= $app['version'];
 $configuration['show_beta'] ??= true;
 $configuration['re_install'] ??= false;
 $configuration['auto_update'] ??= false;
@@ -77,38 +80,38 @@ $pgtitle = [gettext('Extensions'),gettext($configuration['appname']) . ' ' . $co
 if(is_file("{$configuration['rootfolder']}/oneload")):
 	require_once "{$configuration['rootfolder']}/oneload";
 endif;
-$return_val = mwexec("fetch -o {$configuration['rootfolder']}/version_server.txt {$ext_repository_raw}/master/{$config_name}/version.txt",false);
+$return_val = mwexec("fetch -o {$configuration['rootfolder']}/version_server.txt {$app['repository.raw']}/master/{$app['config.name']}/version.txt",false);
 if($return_val == 0):
     $server_version = exec("cat {$configuration['rootfolder']}/version_server.txt");
     if($server_version != $configuration['version']):
 		$savemsg .= sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"),$server_version,gettext('Update Extension'));
 	endif;
-    mwexec("fetch -o {$configuration['rootfolder']}/release_notes.txt {$ext_repository_raw}/master/{$config_name}/release_notes.txt",false);
+    mwexec("fetch -o {$configuration['rootfolder']}/release_notes.txt {$app['repository.raw']}/master/{$app['config.name']}/release_notes.txt",false);
 else:
 	$server_version = gettext('Unable to retrieve version from server!');
 endif;
 if(isset($_POST['ext_remove']) && $_POST['ext_remove']):
 //	remove start/stop commands
-	ext_remove_rc_commands($config_name);
+	ext_remove_rc_commands($app['config.name']);
 //	remove extension pages/links
-    require_once "{$configuration['rootfolder']}/{$config_name}-stop.php";
+    require_once "{$configuration['rootfolder']}/{$app['config.name']}-stop.php";
 	header("Location: index.php");
 endif;
 if(isset($_POST['ext_update']) && $_POST['ext_update']):
 //	download installer & install
-    $return_val = mwexec("fetch -vo {$configuration['rootfolder']}/{$config_name}-install.php '{$ext_repository_raw}/master/{$config_name}/{$config_name}-install.php'",false);
+    $return_val = mwexec("fetch -vo {$configuration['rootfolder']}/{$app['config.name']}-install.php '{$app['repository.raw']}/master/{$app['config.name']}/{$app['config.name']}-install.php'",false);
     if($return_val == 0):
-        require_once "{$configuration['rootfolder']}/{$config_name}-install.php";
+        require_once "{$configuration['rootfolder']}/{$app['config.name']}-install.php";
         header('Refresh:8');
 	else:
-		$input_errors[] = sprintf(gettext('Download of installation file %s failed, installation aborted!'),"{$config_name}-install.php");
+		$input_errors[] = sprintf(gettext('Download of installation file %s failed, installation aborted!'),"{$app['config.name']}-install.php");
 	endif;
 endif;
 bindtextdomain($domain,$localeOSDirectory);
 include 'fbegin.inc';
 bindtextdomain($domain,$localeExtDirectory);
 ?>
-<form action="<?php echo $config_name; ?>-update_extension.php" method="post" name="iform" id="iform" onsubmit="spinner()">
+<form action="<?php echo $app['config.name']; ?>-update_extension.php" method="post" name="iform" id="iform" onsubmit="spinner()">
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
 		<tr>
 			<td class="tabnavtbl">

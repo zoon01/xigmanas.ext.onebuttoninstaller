@@ -1,42 +1,43 @@
 <?php
 /*
-    onebuttoninstaller-install.php
+	onebuttoninstaller-install.php
 
-    Copyright (c) 2015 - 2020 Andreas Schmidhuber
-    All rights reserved.
+	Copyright (c) 2015 - 2020 Andreas Schmidhuber
+	All rights reserved.
 
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
 
-    1. Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
+	1. Redistributions of source code must retain the above copyright notice, this
+	   list of conditions and the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	   this list of conditions and the following disclaimer in the documentation
+	   and/or other materials provided with the distribution.
 
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-//	extension version
-$application_name = 'OneButtonInstaller';
-$application_version = 'v0.4.1';
-$config_name = 'onebuttoninstaller';
-//	$ext_repository_path = 'crestAT/nas4free-.';
-$ext_repository_path = 'ms49434/xigmanas.ext.';
-$ext_repository_url = 'https://github.com/' . $ext_repository_path . $config_name;
-$ext_repository_raw = 'https://raw.github.com/' . $ext_repository_path . $config_name;
-
+require_once 'autoload.php';
 require_once 'config.inc';
 
+$app = [
+	'name' => 'OneButtonInstaller',
+	'version' => 'v0.4.1',
+	'config.name' => 'onebuttoninstaller',
+//	'repository.path' => 'crestAT/nas4free-',
+	'repository.path' => 'ms49434/xigmanas.ext.',
+	'repository.url' => 'https://github.com/' . $app['repository.path'] . $app['config.name'],
+	'repository.raw' => 'https://raw.github.com/' . $app['repository.path'] . $app['config.name']
+];
 $arch = $g['arch'];
 $platform = $g['platform'];
 //	no check necessary since the extension is for all archictectures/platforms/releases => N: warnings for livecd && liveusb within the pages
@@ -53,16 +54,16 @@ global $savemsg;
 //	get directory where the installer script resides
 $install_dir = dirname(__FILE__);
 //	create stripped version name
-$vs = str_replace('.','',$application_version);
+$vs = str_replace('.','',$app['version']);
 //	fetch release archive
-$return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}/master.zip '{$ext_repository_url}/releases/download/{$application_version}/{$config_name}-{$vs}.zip'",false);
+$return_val = mwexec("fetch --no-verify-hostname -vo {$install_dir}/master.zip '{$app['repository.url']}/releases/download/{$app['version']}/{$app['config.name']}-{$vs}.zip'",false);
 if($return_val == 0):
     $return_val = mwexec("tar -xf {$install_dir}/master.zip -C {$install_dir} --exclude='.git*' --strip-components 2",true);
     if($return_val == 0):
         exec("rm {$install_dir}/master.zip");
         exec("chmod -R 775 {$install_dir}");
         require_once "{$install_dir}/ext/extension-lib.inc";
-        $config_file = "{$install_dir}/ext/{$config_name}.conf";
+        $config_file = "{$install_dir}/ext/{$app['config.name']}.conf";
         if(is_file("{$install_dir}/version.txt")):
 			$file_version = exec("cat {$install_dir}/version.txt");
         else:
@@ -102,20 +103,20 @@ if(!is_array($configuration)):
 //		new installation
     endif;
 endif;
-$configuration['appname'] = $application_name;
+$configuration['appname'] = $app['name'];
 $configuration['version'] = exec("cat {$install_dir}/version.txt");
 $configuration['rootfolder'] = $install_dir;
-$configuration['postinit'] = "/usr/local/bin/php-cgi -f {$install_dir}/{$config_name}-start.php";
-$configuration['shutdown'] = "/usr/local/bin/php-cgi -f {$install_dir}/{$config_name}-stop.php";
+$configuration['postinit'] = "/usr/local/bin/php-cgi -f {$install_dir}/{$app['config.name']}-start.php";
+$configuration['shutdown'] = "/usr/local/bin/php-cgi -f {$install_dir}/{$app['config.name']}-stop.php";
 //	remove start/stop commands and existing old rc format entries
-ext_remove_rc_commands($config_name);
+ext_remove_rc_commands($app['config.name']);
 $configuration['rc_uuid_start'] = $configuration['postinit'];
 $configuration['rc_uuid_stop'] = $configuration['shutdown'];
-ext_create_rc_commands($application_name,$configuration['rc_uuid_start'],$configuration['rc_uuid_stop']);
+ext_create_rc_commands($app['name'],$configuration['rc_uuid_start'],$configuration['rc_uuid_stop']);
 ext_save_config($config_file,$configuration);
-require_once "{$install_dir}/{$config_name}-start.php";
+require_once "{$install_dir}/{$app['config.name']}-start.php";
 if($new_installation):
-	echo "\nInstallation completed, use WebGUI | Extensions | {$application_name} to configure the application!\n";
+	echo "\nInstallation completed, use WebGUI | Extensions | {$app['name']} to configure the application!\n";
 endif;
 //	finally fetch the most recent extensions list to get the latest changes if not already in the master release
-$return_val = mwexec("fetch -o {$install_dir}/extensions.txt {$ext_repository_raw}/master/{$config_name}/extensions.txt",false);
+$return_val = mwexec("fetch -o {$install_dir}/extensions.txt {$app['repository.raw']}/master/{$app['config.name']}/extensions.txt",false);
