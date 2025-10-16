@@ -34,9 +34,8 @@ use common\arr;
 
 $app = [
 	'name' => 'OneButtonInstaller',
-	'version' => 'v0.4.2',
+	'version' => 'v0.4.3',
 	'config.name' => 'onebuttoninstaller',
-//	'repository.path' => 'crestAT/nas4free-',
 	'repository.path' => 'ms49434/xigmanas.ext.'
 ];
 $app['repository.url'] = 'https://github.com/' . $app['repository.path'] . $app['config.name'];
