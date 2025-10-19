@@ -37,10 +37,6 @@ use common\uuid;
 $extension_lib_version = '1.4';
 /* Version history:
  * 1.4	2019.05.14	new function ext_load_package
- * 1.3	2018.12.01	function ext_load_config: removed -> $config_data = utf8_encode($config_data); reason: wrong national character encoding
- * 1.2	2018.08.13	function ext_check_version: append line break to the output message
- * 1.1	2017.02.28	save config in ext_remove_rc_commands and ext_create_rc_commands
- * 1.0	2017.02.27	includes changes for PHP 7.1
  */
 
 /*	function ext_load_package
@@ -64,7 +60,7 @@ if(!function_exists('ext_load_package')):
 //			create package file name
 			$pkgFile = "{$rootfolder}/bin/All/{$pkgNeeded}.txz";
 			if(!is_file($pkgFile)):
-//				fetch necessary package
+//			fetch necessary package
 				exec("pkg fetch -y -o '{$rootfolder}/bin' {$pkgNeeded}",$execOutput,$return_val);
 			endif;
 //			extract package
